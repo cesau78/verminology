@@ -19,7 +19,12 @@ reservoir_od       = 82;                          // outer diameter (mm)
 reservoir_height   = 30;                          // total height (mm)
 reservoir_id       = reservoir_od - wall * 2;     // 78mm internal diameter
 reservoir_cavity_h = reservoir_height - wall * 2; // 26mm internal height
-// Volume: π × 39² × 26 ≈ 124ml ≈ 4.2oz
+// Volume: π × 39² × 26 ≈ 124ml ≈ 4.2oz (slightly less with dome)
+
+// ── Ceiling Dome (self-supporting FDM-friendly ceiling) ──────────
+dome_rise    = 3;   // mm the ceiling dips at center — gentle slope, no supports needed
+dome_r       = (dome_rise * dome_rise + pow(reservoir_id / 2, 2)) / (2 * dome_rise);  // 255mm sphere radius
+dome_z_center = reservoir_height - wall - dome_rise + dome_r;  // sphere center z (reservoir-local)
 
 // ── TPU Slit Valve ────────────────────────────────────────────────
 valve_disk_od  = 16;                        // disk outer diameter (mm)

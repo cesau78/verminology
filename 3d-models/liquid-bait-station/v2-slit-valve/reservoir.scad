@@ -8,13 +8,18 @@ include <common.scad>
 // ── Main Assembly ─────────────────────────────────────────────────
 module reservoir() {
     difference() {
-        reservoir_shell();
-        reservoir_cavity();
-        reservoir_valve_bore();
+        union() {
+            difference() {
+                reservoir_shell();
+                reservoir_cavity();
+                reservoir_valve_bore();
+            }
+            reservoir_struts();
+            reservoir_dome();
+        }
         reservoir_ant_tunnel_cutouts();
     }
     reservoir_bayonet_lugs();
-    reservoir_struts();
     reservoir_ant_tunnels();
 }
 
@@ -64,6 +69,22 @@ module reservoir_struts() {
             rotate([0, 0, angle])
                 translate([strut_gap, -strut_thickness / 2, wall])
                     cube([strut_length, strut_thickness, reservoir_cavity_h]);
+        }
+}
+
+// ── Ceiling Dome ──────────────────────────────────────────────────
+// Gentle spherical dome on the interior ceiling — self-supporting for FDM.
+// Thickest at center (dome_rise mm), tapers to zero at the inner wall.
+// ~9° max overhang angle — well within self-supporting range.
+module reservoir_dome() {
+    render_if_needed()
+        intersection() {
+            // Cylinder bounding the dome region
+            translate([0, 0, reservoir_height - wall - dome_rise])
+                cylinder(h = dome_rise, r = reservoir_id / 2);
+            // Sphere whose bottom surface defines the dome curve
+            translate([0, 0, dome_z_center])
+                sphere(r = dome_r);
         }
 }
 
