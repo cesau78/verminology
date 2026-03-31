@@ -53,8 +53,9 @@ module reservoir_bayonet_lugs() {
     for (i = [0 : bayonet_count - 1]) {
         angle = i * (360 / bayonet_count);
         rotate([0, 0, angle])
-            translate([reservoir_od / 2, -bayonet_lug_w / 2, bayonet_lug_z])
-                cube([bayonet_lug_d, bayonet_lug_w, bayonet_lug_h]);
+            // -0.01 radially to overlap into shell wall
+            translate([reservoir_od / 2 - 0.01, -bayonet_lug_w / 2, bayonet_lug_z])
+                cube([bayonet_lug_d + 0.01, bayonet_lug_w, bayonet_lug_h]);
     }
 }
 
@@ -67,8 +68,10 @@ module reservoir_struts() {
             angle = i * (360 / strut_count);
             strut_length = reservoir_id / 2 - strut_gap;
             rotate([0, 0, angle])
+                // +0.01 radially into wall and vertically into ceiling
+                // to avoid coincident faces
                 translate([strut_gap, -strut_thickness / 2, wall])
-                    cube([strut_length, strut_thickness, reservoir_cavity_h]);
+                    cube([strut_length + 0.01, strut_thickness, reservoir_cavity_h + 0.01]);
         }
 }
 
@@ -100,7 +103,7 @@ module reservoir_ant_tunnels() {
     for (i = [0 : ant_tunnel_count - 1]) {
         angle = i * (360 / ant_tunnel_count);
         rotate([0, 0, angle])
-            translate([torus_inner_r - torus_groove_dia / 2, 0, 0])
+            translate([torus_inner_r - torus_groove_dia / 2, 0, 0.01])
                 rotate([0, 90, 0])
                     union() {
                         difference() {
