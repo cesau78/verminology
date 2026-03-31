@@ -76,12 +76,15 @@ module reservoir_struts() {
 // Gentle spherical dome on the interior ceiling — self-supporting for FDM.
 // Thickest at center (dome_rise mm), tapers to zero at the inner wall.
 // ~9° max overhang angle — well within self-supporting range.
+// Bounding cylinder is slightly oversized (+0.01) to avoid coincident
+// faces with the cavity wall and ceiling — ensures a clean 2-manifold.
 module reservoir_dome() {
     render_if_needed()
         intersection() {
-            // Cylinder bounding the dome region
+            // Cylinder bounding the dome region — slight overlap into
+            // cavity wall and ceiling to avoid zero-thickness edges
             translate([0, 0, reservoir_height - wall - dome_rise])
-                cylinder(h = dome_rise, r = reservoir_id / 2);
+                cylinder(h = dome_rise + 0.01, r = reservoir_id / 2 - 0.01);
             // Sphere whose bottom surface defines the dome curve
             translate([0, 0, dome_z_center])
                 sphere(r = dome_r);
