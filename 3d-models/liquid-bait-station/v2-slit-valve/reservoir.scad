@@ -11,9 +11,11 @@ module reservoir() {
         reservoir_shell();
         reservoir_cavity();
         reservoir_valve_bore();
+        reservoir_ant_tunnel_cutouts();
     }
     reservoir_bayonet_lugs();
-    reservoir_internal_ribs();
+    reservoir_struts();
+    reservoir_ant_tunnels();
 }
 
 // ── Shell ─────────────────────────────────────────────────────────
@@ -51,16 +53,65 @@ module reservoir_bayonet_lugs() {
     }
 }
 
-// ── Internal Ribs ─────────────────────────────────────────────────
-// Cross-diameter ribs for print bridging support and anti-slosh.
-module reservoir_internal_ribs() {
+// ── Internal Struts ───────────────────────────────────────────────
+// Radial struts from inner wall toward center, stopping short of the
+// valve bore. Supports ceiling bridging and reduces slosh.
+module reservoir_struts() {
     render_if_needed()
-        for (i = [0 : rib_count - 1]) {
-            angle = i * (360 / rib_count);
+        for (i = [0 : strut_count - 1]) {
+            angle = i * (360 / strut_count);
+            strut_length = reservoir_id / 2 - strut_gap;
             rotate([0, 0, angle])
-                translate([-reservoir_id / 2, -rib_thickness / 2, wall])
-                    cube([reservoir_id, rib_thickness, reservoir_cavity_h]);
+                translate([strut_gap, -strut_thickness / 2, wall])
+                    cube([strut_length, strut_thickness, reservoir_cavity_h]);
         }
+}
+
+// ── Ant Tunnels ───────────────────────────────────────────────────
+// Half-pipe arches flush with the reservoir bottom, spanning radially
+// from the outer groove to the inner groove over the hump.
+// Flat face at z=0 (reservoir bottom), arch extends downward.
+// Open at both ends so ants walk straight through.
+module reservoir_ant_tunnels() {
+    for (i = [0 : ant_tunnel_count - 1]) {
+        angle = i * (360 / ant_tunnel_count);
+        rotate([0, 0, angle])
+            translate([torus_inner_r - torus_groove_dia / 2, 0, 0])
+                rotate([0, 90, 0])
+                    union() {
+                        difference() {
+                            // Outer half-cylinder — keep -X half, which
+                            // after rotation becomes arch curving up into reservoir
+                            intersection() {
+                                cylinder(h = ant_tunnel_length, r = ant_tunnel_r_out);
+                                translate([-ant_tunnel_r_out, -ant_tunnel_r_out, 0])
+                                    cube([ant_tunnel_r_out, ant_tunnel_r_out * 2, ant_tunnel_length]);
+                            }
+                            // Inner cutout — passage for ants
+                            cylinder(h = ant_tunnel_length, r = ant_tunnel_r_in);
+                        }
+                        // Half-disk cap on inner end to retain fluid
+                        intersection() {
+                            cylinder(h = wall, r = ant_tunnel_r_out);
+                            translate([-ant_tunnel_r_out, -ant_tunnel_r_out, 0])
+                                cube([ant_tunnel_r_out, ant_tunnel_r_out * 2, wall]);
+                        }
+                    }
+    }
+}
+
+// ── Ant Tunnel Floor Cutouts ──────────────────────────────────────
+// Cut the reservoir floor only where the tunnel is inside the cavity
+// (up to the inner wall), so the outer wall stays solid.
+module reservoir_ant_tunnel_cutouts() {
+    cutout_length = reservoir_id / 2 - (torus_inner_r - torus_groove_dia / 2);
+    for (i = [0 : ant_tunnel_count - 1]) {
+        angle = i * (360 / ant_tunnel_count);
+        rotate([0, 0, angle])
+            translate([torus_inner_r - torus_groove_dia / 2, 0, -0.5])
+                rotate([0, 90, 0])
+                    cylinder(h = cutout_length, r = ant_tunnel_r_in);
+    }
 }
 
 // ── Render ────────────────────────────────────────────────────────

@@ -12,13 +12,15 @@ module bait_station() {
             station_solid();
             station_bore();
             station_torus_groove();
+            station_inner_groove();
             station_drain_channels();
             station_central_pocket();
             station_bayonet_slots();
             station_guard_holes();
         }
-        // Pin added after cuts so the bore subtraction doesn't remove it
+        // Pin and hump added after cuts so the bore subtraction doesn't remove them
         station_push_pin();
+        station_torus_hump();
     }
 }
 
@@ -29,7 +31,9 @@ module station_solid() {
 }
 
 // ── Bore ──────────────────────────────────────────────────────────
-// Internal cavity where the reservoir sits.
+// Internal cavity where the reservoir sits. Starts at station_floor;
+// the reservoir floats at reservoir_seat held by bayonet lugs,
+// leaving space below for bait to flow to the torus grooves.
 module station_bore() {
     render_if_needed()
         translate([0, 0, station_floor])
@@ -45,6 +49,27 @@ module station_torus_groove() {
         translate([0, 0, station_floor])
             rotate_extrude()
                 translate([torus_groove_r, 0])
+                    circle(d = torus_groove_dia);
+}
+
+// ── Inner Groove ─────────────────────────────────────────────────
+// Second torus groove just inside the hump, same profile as the outer groove.
+module station_inner_groove() {
+    render_if_needed()
+        translate([0, 0, station_floor])
+            rotate_extrude()
+                translate([torus_inner_r, 0])
+                    circle(d = torus_groove_dia);
+}
+
+// ── Torus Hump ───────────────────────────────────────────────────
+// Raised ring just inside the torus groove, same cross-section size.
+// Creates a hump that ants climb over to reach the bait in the groove.
+module station_torus_hump() {
+    render_if_needed()
+        translate([0, 0, station_floor])
+            rotate_extrude()
+                translate([torus_hump_r, 0])
                     circle(d = torus_groove_dia);
 }
 
@@ -73,15 +98,20 @@ module station_central_pocket() {
 // ── Push Pin ──────────────────────────────────────────────────────
 // Central post that spreads the slit valve open when the reservoir
 // is locked down. Cylinder base with a conical tip for smooth entry.
+// Tip is blunted with a small flat cap for safety.
 // When unlocked: tip is 1mm below valve. When locked: 2mm past valve.
 module station_push_pin() {
     render_if_needed() {
         // Cylindrical base (from station base up to cone start)
         cylinder(h = pin_cyl_top, d = pin_dia);
 
-        // Conical tip
+        // Conical tip (tapers to blunt cap diameter, not a point)
         translate([0, 0, pin_cyl_top])
-            cylinder(h = pin_cone_h, d1 = pin_dia, d2 = 0);
+            cylinder(h = pin_cone_h, d1 = pin_dia, d2 = pin_blunt_dia);
+
+        // Flat cap to blunt the tip
+        translate([0, 0, pin_cyl_top + pin_cone_h])
+            cylinder(h = 0.5, d = pin_blunt_dia);
     }
 }
 
@@ -126,11 +156,11 @@ module station_bayonet_slots() {
 // Small holes through the outer wall for ant access to the torus groove.
 // Positioned at the lower part of the groove where liquid collects.
 module station_guard_holes() {
-    hole_length = (station_od - station_id) / 2 + 2;
+    hole_length = station_od / 2 - torus_groove_r + 1;
 
     for (i = [0 : guard_hole_count - 1])
         rotate([0, 0, i * (360 / guard_hole_count)])
-        translate([station_id / 2 - 1, 0, guard_hole_z])
+        translate([torus_groove_r, 0, guard_hole_z])
         rotate([0, 90, 0])
             cylinder(h = hole_length, d = guard_hole_dia);
 }

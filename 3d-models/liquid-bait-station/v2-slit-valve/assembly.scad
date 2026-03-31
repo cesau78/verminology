@@ -17,8 +17,8 @@ locked     = true;   // true = locked (pin engaged), false = unlocked (resting)
 // Reservoir bottom z-position: sits on the bayonet ramp.
 // Locked = dropped onto pin. Unlocked = resting above pin.
 res_z = locked
-    ? station_floor                    // locked: bottom at tray floor
-    : station_floor + bayonet_drop;    // unlocked: elevated, pin clear
+    ? reservoir_seat                    // locked: bottom at top of hump
+    : reservoir_seat + bayonet_drop;    // unlocked: elevated, pin clear
 res_z_final = res_z + (exploded ? explode_gap : 0);
 
 // ── Assembly ──────────────────────────────────────────────────────
