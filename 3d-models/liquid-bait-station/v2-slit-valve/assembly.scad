@@ -35,6 +35,6 @@ crosssection(station_od * 2) {
     // Slit Valve — flush in reservoir floor
     if (show_valve)
         color("Tomato", 0.9)
-            translate([0, 0, res_z_final])
+            translate([0, 0, res_z_final - (exploded ? explode_gap / 2 : 0)])
                 slit_valve();
 }

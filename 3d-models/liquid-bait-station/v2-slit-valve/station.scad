@@ -101,17 +101,33 @@ module station_central_pocket() {
 // Tip is blunted with a small flat cap for safety.
 // When unlocked: tip is 1mm below valve. When locked: 2mm past valve.
 module station_push_pin() {
-    render_if_needed() {
-        // Cylindrical base (from station base up to cone start)
-        cylinder(h = pin_cyl_top, d = pin_dia);
+    render_if_needed() difference() {
+        union() {
+            // Cylindrical base (from station base up to cone start)
+            cylinder(h = pin_cyl_top, d = pin_dia);
 
-        // Conical tip (tapers to blunt cap diameter, not a point)
-        translate([0, 0, pin_cyl_top])
-            cylinder(h = pin_cone_h, d1 = pin_dia, d2 = pin_blunt_dia);
+            // Conical tip (tapers to blunt cap diameter, not a point)
+            translate([0, 0, pin_cyl_top])
+                cylinder(h = pin_cone_h, d1 = pin_dia, d2 = pin_blunt_dia);
 
-        // Flat cap to blunt the tip
-        translate([0, 0, pin_cyl_top + pin_cone_h])
-            cylinder(h = 0.5, d = pin_blunt_dia);
+            // Flat cap to blunt the tip
+            translate([0, 0, pin_cyl_top + pin_cone_h])
+                cylinder(h = 0.5, d = pin_blunt_dia);
+        }
+
+        // Internal fluid channels — fluid enters at the top and exits
+        // through perpendicular holes at the base into the drain channels.
+
+        // Vertical channel down center (z-axis)
+        translate([0, 0, -0.5])
+            cylinder(h = pin_top + 1, d = pin_channel_dia);
+
+        // Perpendicular channels (x and y axes) flush with drain channel bottom
+        for (angle = [0, 90])
+            rotate([0, 0, angle])
+                rotate([0, 90, 0])
+                    translate([-(station_floor - drain_depth), 0, -pin_dia / 2 - 0.5])
+                        cylinder(h = pin_dia + 1, d = pin_channel_dia);
     }
 }
 

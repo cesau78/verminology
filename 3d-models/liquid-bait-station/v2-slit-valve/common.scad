@@ -4,7 +4,7 @@
 
 // ── Performance Settings ──────────────────────────────────────────
 preview = false; // true = faster preview; false = full detail render
-crosssection_view = true;  // cut the model along a plane to inspect internals
+crosssection_view = false;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -22,9 +22,11 @@ reservoir_cavity_h = reservoir_height - wall * 2; // 26mm internal height
 // Volume: π × 39² × 26 ≈ 124ml ≈ 4.2oz
 
 // ── TPU Slit Valve ────────────────────────────────────────────────
-valve_disk_od = 16;                        // disk outer diameter (mm)
-valve_bore_id = valve_disk_od - 0.6;       // tight press-fit bore (0.6mm interference)
-valve_disk_h  = wall;                      // same as floor thickness — flush both sides
+valve_disk_od  = 16;                        // disk outer diameter (mm)
+valve_bore_id  = valve_disk_od;             // snug sliding fit — FDM shrinkage holds it
+valve_disk_h   = wall;                      // same as floor thickness — flush inside
+valve_flange_od = valve_disk_od + 4;        // flange: 2mm larger radius — stop collar
+valve_flange_h  = 2;                        // flange height (mm) — prevents push-through
 slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
@@ -49,6 +51,8 @@ pin_dia         = 6;   // pin diameter (mm) — smaller than slit_length for pro
 pin_cone_h      = 3;   // tapered tip height for smooth slit entry
 pin_blunt_dia   = 2;   // flat cap diameter at cone tip to blunt the point
 pin_penetration = 2;   // mm past valve top when fully locked
+
+pin_channel_dia = 2;   // internal fluid channel diameter (mm)
 
 // Computed pin heights (from station z=0)
 pin_top     = reservoir_seat + valve_disk_h + pin_penetration;  // 12mm
@@ -86,7 +90,7 @@ central_pocket_r = pin_dia / 2 + 3;  // 6mm — annular pool around pin base
 ant_tunnel_count  = guard_hole_count;              // one tunnel per guard hole
 ant_tunnel_r_out  = 6;                             // outer half-cylinder radius
 ant_tunnel_r_in   = 4;                             // inner cutout radius (passage)
-ant_tunnel_length = reservoir_od / 2 - (torus_inner_r - torus_groove_dia / 2); // radial span: inner edge of inner groove into reservoir wall
+ant_tunnel_length = reservoir_id / 2 - (torus_inner_r - torus_groove_dia / 2); // radial span: inner edge of inner groove to reservoir inner wall
 
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
 strut_count     = 6;   // radial struts evenly spaced

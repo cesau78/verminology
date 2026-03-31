@@ -33,8 +33,8 @@ module reservoir_cavity() {
 
 // ── Valve Bore ────────────────────────────────────────────────────
 // Through-hole in the center of the floor for the TPU slit valve.
-// Tight press-fit (0.6mm interference) — no flange, sits flush on both sides.
-// The valve is pushed in from outside and held by friction alone.
+// Snug sliding fit — valve disk slides in and the wider flange collar
+// sits on the outside of the floor, preventing push-through.
 module reservoir_valve_bore() {
     render_if_needed()
         translate([0, 0, -0.5])
