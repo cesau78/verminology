@@ -21,20 +21,37 @@ res_z = locked
     : reservoir_seat + bayonet_drop;    // unlocked: elevated, pin clear
 res_z_final = res_z + (exploded ? explode_gap : 0);
 
+// ── Valve position (shared by flange and disk) ──────────────────
+valve_z = res_z_final - valve_flange_h - (exploded ? explode_gap / 2 : 0);
+
 // ── Assembly ──────────────────────────────────────────────────────
 crosssection(station_od * 2) {
-    // Station — at origin
+    // Station (without pin) — at origin
     color("SlateGray", 0.8)
         bait_station();
+
+    // Pin shaft — distinct color for inspection
+    color("Gold", 0.9)
+        difference() { station_push_pin_shaft(); station_push_pin_channels(); }
+
+    // Pin cone — distinct color for inspection
+    color("OrangeRed", 0.9)
+        difference() { station_push_pin_cone(); station_push_pin_channels(); }
 
     // Reservoir — dropped into station bore
     color("SteelBlue", 0.8)
         translate([0, 0, res_z_final])
             reservoir();
 
-    // Slit Valve — flush in reservoir floor
+    // Retention ring (flange) — sits below reservoir floor
+    if (show_valve)
+        color("LimeGreen", 0.9)
+            translate([0, 0, valve_z])
+                slit_valve_flange();
+
+    // Slit valve disk — slides into reservoir bore
     if (show_valve)
         color("Tomato", 0.9)
-            translate([0, 0, res_z_final - (exploded ? explode_gap / 2 : 0)])
-                slit_valve();
+            translate([0, 0, valve_z])
+                slit_valve_disk();
 }

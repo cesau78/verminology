@@ -4,7 +4,7 @@
 
 // ── Performance Settings ──────────────────────────────────────────
 preview = false; // true = faster preview; false = full detail render
-crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -48,15 +48,16 @@ station_height   = 18;   // total height — raised 3mm for higher reservoir sea
 
 // ── Push Pin (station center, spreads valve slits on lock) ────────
 pin_dia         = 6;   // pin diameter (mm) — smaller than slit_length for proper spread
-pin_cone_h      = 3;   // tapered tip height for smooth slit entry
+pin_cone_h      = 2;   // tapered tip height for smooth slit entry
 pin_blunt_dia   = 2;   // flat cap diameter at cone tip to blunt the point
 pin_penetration = 2;   // mm past valve top when fully locked
 
 pin_channel_dia = 2;   // internal fluid channel diameter (mm)
 
 // Computed pin heights (from station z=0)
-pin_top     = reservoir_seat + valve_disk_h + pin_penetration;  // 12mm
-pin_cyl_top = pin_top - pin_cone_h;                             // 9mm
+// Cone starts where the retention flange ends (flange top = reservoir_seat)
+pin_cyl_top = reservoir_seat;                  // 8.2mm — cone begins at flange top
+pin_top     = pin_cyl_top + pin_cone_h;        // 11.2mm — cone tip
 
 // ── Bayonet Twist-Lock ────────────────────────────────────────────
 // Lugs on reservoir outer wall; ramped L-slots in station bore wall.

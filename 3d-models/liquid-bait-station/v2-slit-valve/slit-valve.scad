@@ -7,16 +7,23 @@
 include <common.scad>
 
 module slit_valve() {
-    // Stop-collar flange — wider cylinder that sits on the reservoir floor
-    // and prevents the valve from being pushed into the reservoir
+    slit_valve_flange();
+    slit_valve_disk();
+}
+
+// Stop-collar flange — wider cylinder that sits on the reservoir floor
+// and prevents the valve from being pushed into the reservoir
+module slit_valve_flange() {
     difference() {
         cylinder(h = valve_flange_h, d = valve_flange_od);
         // Pin clearance hole — 0.2mm larger radius than pin
         translate([0, 0, -0.5])
-            cylinder(h = valve_flange_h + 1, d = pin_dia + 0.4);
+            cylinder(h = valve_flange_h + 1, d = pin_dia + 0.1);
     }
+}
 
-    // Main disk — slides snugly into the reservoir bore
+// Main disk — slides snugly into the reservoir bore
+module slit_valve_disk() {
     difference() {
         translate([0, 0, valve_flange_h])
             cylinder(h = valve_disk_h, d = valve_disk_od);

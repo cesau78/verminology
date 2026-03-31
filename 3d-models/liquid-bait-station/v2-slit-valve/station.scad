@@ -81,7 +81,7 @@ module station_drain_channels() {
         for (i = [0 : drain_count - 1])
             rotate([0, 0, i * (360 / drain_count)])
                 translate([0, -drain_width / 2, station_floor - drain_depth])
-                    cube([torus_groove_r + torus_groove_dia / 2,
+                    cube([torus_inner_r,
                           drain_width,
                           drain_depth + 0.5]);
 }
@@ -99,36 +99,42 @@ module station_central_pocket() {
 // Central post that spreads the slit valve open when the reservoir
 // is locked down. Cylinder base with a conical tip for smooth entry.
 // Tip is blunted with a small flat cap for safety.
-// When unlocked: tip is 1mm below valve. When locked: 2mm past valve.
 module station_push_pin() {
     render_if_needed() difference() {
         union() {
-            // Cylindrical base (from station base up to cone start)
-            cylinder(h = pin_cyl_top, d = pin_dia);
-
-            // Conical tip (tapers to blunt cap diameter, not a point)
-            translate([0, 0, pin_cyl_top])
-                cylinder(h = pin_cone_h, d1 = pin_dia, d2 = pin_blunt_dia);
-
-            // Flat cap to blunt the tip
-            translate([0, 0, pin_cyl_top + pin_cone_h])
-                cylinder(h = 0.5, d = pin_blunt_dia);
+            station_push_pin_shaft();
+            station_push_pin_cone();
         }
-
-        // Internal fluid channels — fluid enters at the top and exits
-        // through perpendicular holes at the base into the drain channels.
-
-        // Vertical channel down center (z-axis)
-        translate([0, 0, -0.5])
-            cylinder(h = pin_top + 1, d = pin_channel_dia);
-
-        // Perpendicular channels (x and y axes) flush with drain channel bottom
-        for (angle = [0, 90])
-            rotate([0, 0, angle])
-                rotate([0, 90, 0])
-                    translate([-(station_floor - drain_depth), 0, -pin_dia / 2 - 0.5])
-                        cylinder(h = pin_dia + 1, d = pin_channel_dia);
+        station_push_pin_channels();
     }
+}
+
+// Cylindrical shaft from base to cone start
+module station_push_pin_shaft() {
+    cylinder(h = pin_cyl_top, d = pin_dia);
+}
+
+// Conical tip with blunted flat cap
+module station_push_pin_cone() {
+    // Tapered cone
+    translate([0, 0, pin_cyl_top])
+        cylinder(h = pin_cone_h, d1 = pin_dia, d2 = pin_blunt_dia);
+    // Flat cap to blunt the tip
+    translate([0, 0, pin_cyl_top + pin_cone_h])
+        cylinder(h = 0.5, d = pin_blunt_dia);
+}
+
+// Internal fluid channels — subtracted from the assembled pin
+module station_push_pin_channels() {
+    // Vertical channel down center (z-axis)
+    translate([0, 0, -0.5])
+        cylinder(h = pin_top + 1, d = pin_channel_dia);
+    // Perpendicular channels (x and y axes) flush with drain channel bottom
+    for (angle = [0, 90])
+        rotate([0, 0, angle])
+            rotate([0, 90, 0])
+                translate([-(station_floor - drain_depth), 0, -pin_dia / 2 - 0.5])
+                    cylinder(h = pin_dia + 1, d = pin_channel_dia);
 }
 
 // ── Bayonet Ramp-Slots ────────────────────────────────────────────
