@@ -4,9 +4,9 @@
 
 // ── Performance Settings ──────────────────────────────────────────
 preview = false; // true = faster preview; false = full detail render
-crosssection_view = true;  // cut the model along a plane to inspect internals
-crosssection_axis = "x";   // axis: "x", "y", or "z"
-crosssection_pos  = 2;     // position (mm) along the chosen axis
+crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_axis = "z";   // axis: "x", "y", or "z"
+crosssection_pos  = 10;     // position (mm) along the chosen axis
 
 $fn = preview ? 32 : 64;
 
@@ -102,7 +102,7 @@ ant_tunnel_length = reservoir_id / 2 - ant_tunnel_start; // radial span: retaine
 // Extends the reservoir OD to match station OD above the station rim.
 // In reservoir-local coords, starts where the station wall ends.
 skirt_od       = station_od;                                    // 90mm — flush with station
-skirt_id       = reservoir_od;                                  // 82mm — wraps around reservoir shell
+skirt_id       = reservoir_id;                                  // 78mm — overlaps into reservoir wall to avoid gaps
 skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 

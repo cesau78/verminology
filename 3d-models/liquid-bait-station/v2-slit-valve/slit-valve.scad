@@ -52,9 +52,9 @@ module slit_valve_barb() {
                      d2 = valve_retainer_od - taper_inset);
             translate([0, 0, -0.5])
                 cylinder(h = valve_retainer_h + 1, d = valve_retainer_id);
-            // Flow slots — 2mm gaps at 90° intervals
+            // Flow slots — 2mm gaps at 45° offset from X-slits
             for (i = [0 : 3])
-                rotate([0, 0, i * 90])
+                rotate([0, 0, i * 90 + 45])
                     translate([-1, -valve_retainer_od / 2, -0.5])
                         cube([2, valve_retainer_od, valve_retainer_h + 1]);
         }

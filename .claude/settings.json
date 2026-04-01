@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Program Files/OpenSCAD/openscad.com\" -o /dev/null \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/station.scad\")"
+    ]
+  }
+}
