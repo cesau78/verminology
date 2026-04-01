@@ -14,11 +14,12 @@ show_valve = true;   // show the TPU slit valve disk
 locked     = true;   // true = locked (pin engaged), false = unlocked (resting)
 
 // ── Positions ─────────────────────────────────────────────────────
-// Reservoir bottom z-position: sits on the bayonet ramp.
-// Locked = dropped onto pin. Unlocked = resting above pin.
+// Reservoir bottom z-position: drops straight through vertical slot.
+// Locked = dropped + twisted CW onto pin. Unlocked = elevated, pin clear.
 res_z = locked
     ? reservoir_seat                    // locked: bottom at top of hump
     : reservoir_seat + bayonet_drop;    // unlocked: elevated, pin clear
+res_rot = locked ? -bayonet_rotation : 0;  // CW twist when locked
 res_z_final = res_z + (exploded ? explode_gap : 0);
 
 // ── Valve position (shared by flange and disk) ──────────────────
@@ -38,20 +39,15 @@ crosssection(station_od * 2) {
     color("OrangeRed", 0.9)
         difference() { station_push_pin_cone(); station_push_pin_channels(); }
 
-    // Reservoir — dropped into station bore
+    // Reservoir — dropped into station bore, twisted CW when locked
     color("SteelBlue", 0.8)
         translate([0, 0, res_z_final])
-            reservoir();
+            rotate([0, 0, res_rot])
+                reservoir();
 
-    // Retention ring (flange) — sits below reservoir floor
+    // Slit valve — flange, disk, and retention ring
     if (show_valve)
         color("LimeGreen", 0.9)
             translate([0, 0, valve_z])
-                slit_valve_flange();
-
-    // Slit valve disk — slides into reservoir bore
-    if (show_valve)
-        color("Tomato", 0.9)
-            translate([0, 0, valve_z])
-                slit_valve_disk();
+                slit_valve();
 }

@@ -15,7 +15,7 @@ module reservoir() {
                 reservoir_valve_bore();
             }
             reservoir_struts();
-            reservoir_dome();
+            reservoir_skirt();
         }
         reservoir_ant_tunnel_cutouts();
     }
@@ -75,23 +75,17 @@ module reservoir_struts() {
         }
 }
 
-// ── Ceiling Dome ──────────────────────────────────────────────────
-// Gentle spherical dome on the interior ceiling — self-supporting for FDM.
-// Thickest at center (dome_rise mm), tapers to zero at the inner wall.
-// ~9° max overhang angle — well within self-supporting range.
-// Bounding cylinder is slightly oversized (+0.01) to avoid coincident
-// faces with the cavity wall and ceiling — ensures a clean 2-manifold.
-module reservoir_dome() {
+// ── Skirt ─────────────────────────────────────────────────────────
+// Outer cylinder that extends the reservoir to station OD above the
+// station rim. When locked, the skirt sits flush with the station
+// wall — one consistent diameter for the whole assembled unit.
+module reservoir_skirt() {
     render_if_needed()
-        intersection() {
-            // Cylinder bounding the dome region — slight overlap into
-            // cavity wall and ceiling to avoid zero-thickness edges
-            translate([0, 0, reservoir_height - wall - dome_rise])
-                cylinder(h = dome_rise + 0.01, r = reservoir_id / 2 - 0.01);
-            // Sphere whose bottom surface defines the dome curve
-            translate([0, 0, dome_z_center])
-                sphere(r = dome_r);
-        }
+        translate([0, 0, skirt_z_start])
+            difference() {
+                cylinder(h = skirt_height, d = skirt_od);
+                cylinder(h = skirt_height, d = skirt_id);
+            }
 }
 
 // ── Ant Tunnels ───────────────────────────────────────────────────
@@ -142,4 +136,4 @@ module reservoir_ant_tunnel_cutouts() {
 }
 
 // ── Render ────────────────────────────────────────────────────────
-crosssection(reservoir_od) reservoir();
+crosssection(skirt_od) reservoir();

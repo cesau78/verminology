@@ -9,6 +9,7 @@ include <common.scad>
 module slit_valve() {
     slit_valve_flange();
     slit_valve_disk();
+    slit_valve_barb();
 }
 
 // Stop-collar flange — wider cylinder that sits on the reservoir floor
@@ -35,6 +36,28 @@ module slit_valve_disk() {
                 translate([-slit_length / 2, -slit_width / 2, valve_flange_h - 0.5])
                     cube([slit_length, slit_width, valve_disk_h + 1]);
     }
+}
+
+// ── Top Retention Disk ────────────────────────────────────────────
+// Thin ring on top of the disk — slightly wider than the bore so it
+// catches on the inside of the reservoir floor. TPU flexes through
+// the bore on insertion, then springs back to retain. Bottom flange
+// stops push-through; this ring stops pull-out.
+module slit_valve_barb() {
+    taper_inset = valve_retainer_h * tan(30) * 2;  // OD reduction over height
+    translate([0, 0, valve_flange_h + valve_disk_h])
+        difference() {
+            cylinder(h = valve_retainer_h,
+                     d1 = valve_retainer_od,
+                     d2 = valve_retainer_od - taper_inset);
+            translate([0, 0, -0.5])
+                cylinder(h = valve_retainer_h + 1, d = valve_retainer_id);
+            // Flow slots — 2mm gaps at 90° intervals
+            for (i = [0 : 3])
+                rotate([0, 0, i * 90])
+                    translate([-1, -valve_retainer_od / 2, -0.5])
+                        cube([2, valve_retainer_od, valve_retainer_h + 1]);
+        }
 }
 
 // ── Render ────────────────────────────────────────────────────────

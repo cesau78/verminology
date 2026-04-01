@@ -137,37 +137,34 @@ module station_push_pin_channels() {
                     cylinder(h = pin_dia + 1, d = pin_channel_dia);
 }
 
-// ── Bayonet Ramp-Slots ────────────────────────────────────────────
-// L-shaped slots in the bore wall: vertical entry + ramped lock channel.
-// The reservoir lugs drop through the vertical slot, then twist to lock.
-// The ramp descends bayonet_drop mm over bayonet_rotation degrees,
-// pulling the reservoir down onto the push pin.
+// ── Bayonet Twist-Lock Slots ──────────────────────────────────────
+// Straight vertical entry slots + horizontal lock channel.
+// Reservoir drops in, then twists clockwise (righty-tighty) to lock.
+// Negative rotation in OpenSCAD = clockwise when viewed from above.
 module station_bayonet_slots() {
     slot_w     = bayonet_lug_w + clearance * 2;  // width with clearance
     slot_h     = bayonet_lug_h + clearance * 2;  // height with clearance
     slot_depth = bayonet_lug_d + clearance + 1;  // radial depth (through inner wall)
-    ramp_step  = 5;  // degrees per hull segment
+    lock_step  = 5;  // degrees per hull segment
 
     for (i = [0 : bayonet_count - 1]) {
         angle = i * (360 / bayonet_count);
 
-        // Vertical entry slot — open at top for reservoir insertion
+        // Vertical entry slot — open at top, drops straight to locked height
         rotate([0, 0, angle])
-            translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_unlocked])
-                cube([slot_depth, slot_w, station_height - lug_z_unlocked + 1]);
+            translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_locked])
+                cube([slot_depth, slot_w, station_height - lug_z_locked + 1]);
 
-        // Ramped lock channel — descends from entry height to locked height
-        // hull() between consecutive angular steps creates a smooth ramp
-        for (s = [0 : ramp_step : bayonet_rotation - ramp_step]) {
+        // Horizontal lock channel — extends clockwise (negative angle)
+        // at locked height. hull() between angular steps for smooth arc.
+        for (s = [0 : lock_step : bayonet_rotation - lock_step]) {
             hull() {
-                rotate([0, 0, angle + s])
-                translate([station_id / 2 - 0.5, -slot_w / 2,
-                           lug_z_unlocked - (s / bayonet_rotation) * bayonet_drop])
+                rotate([0, 0, angle - s])
+                translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_locked])
                     cube([slot_depth, slot_w, slot_h]);
 
-                rotate([0, 0, angle + s + ramp_step])
-                translate([station_id / 2 - 0.5, -slot_w / 2,
-                           lug_z_unlocked - ((s + ramp_step) / bayonet_rotation) * bayonet_drop])
+                rotate([0, 0, angle - s - lock_step])
+                translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_locked])
                     cube([slot_depth, slot_w, slot_h]);
             }
         }

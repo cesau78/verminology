@@ -6,7 +6,7 @@
 preview = false; // true = faster preview; false = full detail render
 crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
-crosssection_pos  = 0;     // position (mm) along the chosen axis
+crosssection_pos  = 2;     // position (mm) along the chosen axis
 
 $fn = preview ? 32 : 64;
 
@@ -21,17 +21,15 @@ reservoir_id       = reservoir_od - wall * 2;     // 78mm internal diameter
 reservoir_cavity_h = reservoir_height - wall * 2; // 26mm internal height
 // Volume: π × 39² × 26 ≈ 124ml ≈ 4.2oz (slightly less with dome)
 
-// ── Ceiling Dome (self-supporting FDM-friendly ceiling) ──────────
-dome_rise    = 3;   // mm the ceiling dips at center — gentle slope, no supports needed
-dome_r       = (dome_rise * dome_rise + pow(reservoir_id / 2, 2)) / (2 * dome_rise);  // 255mm sphere radius
-dome_z_center = reservoir_height - wall - dome_rise + dome_r;  // sphere center z (reservoir-local)
-
 // ── TPU Slit Valve ────────────────────────────────────────────────
 valve_disk_od  = 16;                        // disk outer diameter (mm)
 valve_bore_id  = valve_disk_od;             // snug sliding fit — FDM shrinkage holds it
 valve_disk_h   = wall;                      // same as floor thickness — flush inside
 valve_flange_od = valve_disk_od + 4;        // flange: 2mm larger radius — stop collar
 valve_flange_h  = 2;                        // flange height (mm) — prevents push-through
+valve_retainer_od = valve_disk_od + 1;       // top retention disk OD — just past bore edge
+valve_retainer_id = valve_disk_od - 4;       // top retention disk ID — 2mm lip inward
+valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
 slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
@@ -65,24 +63,24 @@ pin_cyl_top = reservoir_seat;                  // 8.2mm — cone begins at flang
 pin_top     = pin_cyl_top + pin_cone_h;        // 11.2mm — cone tip
 
 // ── Bayonet Twist-Lock ────────────────────────────────────────────
-// Lugs on reservoir outer wall; ramped L-slots in station bore wall.
-// Twisting the reservoir drives it down onto the push pin.
+// Lugs on reservoir outer wall; straight vertical entry slots in station bore.
+// Reservoir drops in, then twists clockwise (righty-tighty) to lock.
 bayonet_count    = 3;    // number of lugs, evenly spaced
 bayonet_lug_w    = 3;    // lug circumferential width (mm)
 bayonet_lug_h    = 2;    // lug height (mm)
 bayonet_lug_d    = 1.5;  // lug radial protrusion from reservoir wall (mm)
 bayonet_rotation = 30;   // degrees to twist for lock
-bayonet_drop     = 5;    // mm the reservoir descends on lock (pin engagement travel)
+bayonet_drop     = 5;    // mm the reservoir drops through vertical slot (pin engagement travel)
 bayonet_lug_z    = 2;    // lug bottom position from reservoir bottom (mm)
 
 // Computed lug z-positions in station coordinates
 lug_z_locked   = reservoir_seat + bayonet_lug_z;                // 10mm
 lug_z_unlocked = reservoir_seat + bayonet_drop + bayonet_lug_z; // 15mm
-// When unlocked: pin tip (z=12) is 1mm below valve bottom (z=13). No contact.
-// When locked:   pin tip (z=12) pushes 2mm past valve top (z=10). Full spread.
+// Unlocked (resting above slot): pin tip below valve — no contact.
+// Locked (dropped + twisted CW):  pin pushes past valve top — full spread.
 
 // ── Guard Holes (ant access through outer wall at groove level) ───
-guard_hole_dia   = 3;    // hole diameter — ants only
+guard_hole_dia   = 3.2;  // hole diameter — ants only
 guard_hole_count = 12;   // number around circumference
 guard_hole_z     = station_floor - torus_groove_dia / 3;  // 3mm — lower groove zone
 
@@ -97,6 +95,14 @@ ant_tunnel_count  = guard_hole_count;              // one tunnel per guard hole
 ant_tunnel_r_out  = 6;                             // outer half-cylinder radius
 ant_tunnel_r_in   = 4;                             // inner cutout radius (passage)
 ant_tunnel_length = reservoir_id / 2 - (torus_inner_r - torus_groove_dia / 2); // radial span: inner edge of inner groove to reservoir inner wall
+
+// ── Reservoir Skirt (flush outer shell when assembled) ───────────
+// Extends the reservoir OD to match station OD above the station rim.
+// In reservoir-local coords, starts where the station wall ends.
+skirt_od       = station_od;                                    // 90mm — flush with station
+skirt_id       = reservoir_od;                                  // 82mm — wraps around reservoir shell
+skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
+skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
 strut_count     = 6;   // radial struts evenly spaced
