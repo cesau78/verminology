@@ -90,11 +90,13 @@ drain_width      = 3;   // channel width (mm)
 drain_depth      = 2;   // channel depth below floor surface (mm)
 central_pocket_r = pin_dia / 2 + 3;  // 6mm — annular pool around pin base
 
-// ── Ant Tunnels (half-pipe arches over hump, flush with reservoir bottom) ──
+// ── Ant Tunnels (half-cone ramps from wall to valve retainer) ────
 ant_tunnel_count  = guard_hole_count;              // one tunnel per guard hole
-ant_tunnel_r_out  = 6;                             // outer half-cylinder radius
-ant_tunnel_r_in   = 4;                             // inner cutout radius (passage)
-ant_tunnel_length = reservoir_id / 2 - (torus_inner_r - torus_groove_dia / 2); // radial span: inner edge of inner groove to reservoir inner wall
+// Cone base radius sized so adjacent cones touch at the reservoir wall
+ant_tunnel_r_out  = reservoir_id / 2 * sin(180 / ant_tunnel_count);  // ~10.1mm
+ant_tunnel_r_in   = ant_tunnel_r_out - wall;       // passage radius (2mm wall)
+ant_tunnel_start  = valve_retainer_od / 2 + 1;     // inner end radius from center (just outside retainer)
+ant_tunnel_length = reservoir_id / 2 - ant_tunnel_start; // radial span: retainer edge to reservoir inner wall
 
 // ── Reservoir Skirt (flush outer shell when assembled) ───────────
 // Extends the reservoir OD to match station OD above the station rim.
@@ -105,7 +107,7 @@ skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from re
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
-strut_count     = 6;   // radial struts evenly spaced
+strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned
 strut_thickness = 1;   // strut wall thickness (mm)
 strut_gap       = valve_bore_id / 2 + 2;  // stop short of valve bore center
 

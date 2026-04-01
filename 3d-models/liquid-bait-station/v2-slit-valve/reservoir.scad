@@ -89,49 +89,43 @@ module reservoir_skirt() {
 }
 
 // ── Ant Tunnels ───────────────────────────────────────────────────
-// Half-pipe arches flush with the reservoir bottom, spanning radially
-// from the outer groove to the inner groove over the hump.
-// Flat face at z=0 (reservoir bottom), arch extends downward.
-// Open at both ends so ants walk straight through.
+// Half-cone ramps on the reservoir bottom, spanning radially from
+// just outside the valve retainer to the reservoir inner wall.
+// Full arch height at the wall (cone base), tapering to flush with
+// the floor at the retainer end (cone tip). Ants walk up the ramp.
 module reservoir_ant_tunnels() {
     for (i = [0 : ant_tunnel_count - 1]) {
         angle = i * (360 / ant_tunnel_count);
         rotate([0, 0, angle])
-            translate([torus_inner_r - torus_groove_dia / 2, 0, 0.01])
+            translate([ant_tunnel_start, 0, 0.01])
                 rotate([0, 90, 0])
-                    union() {
-                        difference() {
-                            // Outer half-cylinder — keep -X half, which
-                            // after rotation becomes arch curving up into reservoir
-                            intersection() {
-                                cylinder(h = ant_tunnel_length, r = ant_tunnel_r_out);
-                                translate([-ant_tunnel_r_out, -ant_tunnel_r_out, 0])
-                                    cube([ant_tunnel_r_out, ant_tunnel_r_out * 2, ant_tunnel_length]);
-                            }
-                            // Inner cutout — passage for ants
-                            cylinder(h = ant_tunnel_length, r = ant_tunnel_r_in);
-                        }
-                        // Half-disk cap on inner end to retain fluid
+                    difference() {
+                        // Outer half-cone — full radius at wall, floor-thickness
+                        // diameter at retainer end
                         intersection() {
-                            cylinder(h = wall, r = ant_tunnel_r_out);
+                            cylinder(h = ant_tunnel_length,
+                                     r1 = 2, r2 = ant_tunnel_r_out);
                             translate([-ant_tunnel_r_out, -ant_tunnel_r_out, 0])
-                                cube([ant_tunnel_r_out, ant_tunnel_r_out * 2, wall]);
+                                cube([ant_tunnel_r_out, ant_tunnel_r_out * 2,
+                                      ant_tunnel_length]);
                         }
+                        // Inner cone cutout — passage for ants
+                        cylinder(h = ant_tunnel_length,
+                                 r1 = 0, r2 = ant_tunnel_r_in);
                     }
     }
 }
 
 // ── Ant Tunnel Floor Cutouts ──────────────────────────────────────
-// Cut the reservoir floor only where the tunnel is inside the cavity
-// (up to the inner wall), so the outer wall stays solid.
+// Conical cuts through the reservoir floor matching the tunnel passage.
 module reservoir_ant_tunnel_cutouts() {
-    cutout_length = reservoir_id / 2 - (torus_inner_r - torus_groove_dia / 2);
     for (i = [0 : ant_tunnel_count - 1]) {
         angle = i * (360 / ant_tunnel_count);
         rotate([0, 0, angle])
-            translate([torus_inner_r - torus_groove_dia / 2, 0, -0.5])
+            translate([ant_tunnel_start, 0, -0.5])
                 rotate([0, 90, 0])
-                    cylinder(h = cutout_length, r = ant_tunnel_r_in);
+                    cylinder(h = ant_tunnel_length,
+                             r1 = 0, r2 = ant_tunnel_r_in);
     }
 }
 
