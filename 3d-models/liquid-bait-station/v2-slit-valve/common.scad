@@ -15,11 +15,11 @@ wall      = 2;     // shell wall thickness (mm)
 clearance = 0.2;   // general fit clearance for mating parts (mm)
 
 // ── Reservoir ─────────────────────────────────────────────────────
-reservoir_od       = 82;                          // outer diameter (mm)
+reservoir_od       = 77;                          // outer diameter (mm) — 3×3 on 256mm plate
 reservoir_height   = 30;                          // total height (mm)
-reservoir_id       = reservoir_od - wall * 2;     // 78mm internal diameter
+reservoir_id       = reservoir_od - wall * 2;     // 73mm internal diameter
 reservoir_cavity_h = reservoir_height - wall * 2; // 26mm internal height
-// Volume: π × 39² × 26 ≈ 124ml ≈ 4.2oz (slightly less with dome)
+// Volume: π × 36.5² × 26 ≈ 109ml ≈ 3.7oz (slightly less with dome)
 
 // ── TPU Slit Valve ────────────────────────────────────────────────
 valve_disk_od  = 16;                        // disk outer diameter (mm)
@@ -34,16 +34,16 @@ slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
 // ── Station ───────────────────────────────────────────────────────
-station_od     = 90;   // outer diameter (mm)
+station_od     = 85;   // outer diameter (mm) — 3×3 on 256mm plate (3×85=255)
 station_floor  = 5;    // floor thickness — deep enough for torus groove
-station_id     = reservoir_od + clearance * 2;  // 82.4mm bore for reservoir
+station_id     = reservoir_od + clearance * 2;  // 77.4mm bore for reservoir
 
 // ── Torus Groove (full-circle ring channel in tray floor) ─────────
 torus_groove_dia = 6;  // cross-section diameter — semicircle profile in floor
-torus_groove_r   = station_id / 2 - torus_groove_dia / 2;  // 38.2mm center radius
+torus_groove_r   = station_id / 2 - torus_groove_dia / 2;  // 35.7mm center radius
 // Outer edge of groove touches the bore wall for direct ant access.
-torus_hump_r     = torus_groove_r - torus_groove_dia;      // 32.2mm — hump ring just inside groove
-torus_inner_r    = torus_hump_r - torus_groove_dia;        // 26.2mm — inner groove just inside hump
+torus_hump_r     = torus_groove_r - torus_groove_dia;      // 29.7mm — hump ring just inside groove
+torus_inner_r    = torus_hump_r - torus_groove_dia;        // 23.7mm — inner groove just inside hump
 
 // Reservoir sits on top of the hump torus
 reservoir_seat   = station_floor + torus_groove_dia / 2 + clearance;  // 8.2mm — just above hump top
@@ -69,7 +69,7 @@ bayonet_count    = 3;    // number of lugs, evenly spaced
 bayonet_lug_w    = 3;    // lug circumferential width (mm)
 bayonet_lug_h    = 2;    // lug height (mm)
 bayonet_lug_d    = 1.5;  // lug radial protrusion from reservoir wall (mm)
-bayonet_rotation = 30;   // degrees to twist for lock
+bayonet_rotation = 5;   // degrees to twist for lock
 bayonet_drop     = 5;    // mm the reservoir drops through vertical slot (pin engagement travel)
 bayonet_lug_z    = 2;    // lug bottom position from reservoir bottom (mm)
 
@@ -93,7 +93,7 @@ central_pocket_r = pin_dia / 2 + 3;  // 6mm — annular pool around pin base
 // ── Ant Tunnels (half-cone ramps from wall to valve retainer) ────
 ant_tunnel_count  = guard_hole_count;              // one tunnel per guard hole
 // Cone base radius sized so adjacent cones touch at the reservoir wall
-ant_tunnel_r_out  = reservoir_id / 2 * sin(180 / ant_tunnel_count);  // ~10.1mm
+ant_tunnel_r_out  = reservoir_id / 2 * sin(180 / ant_tunnel_count);  // ~9.4mm
 ant_tunnel_r_in   = ant_tunnel_r_out - wall;       // passage radius (2mm wall)
 ant_tunnel_start  = valve_retainer_od / 2 + 1;     // inner end radius from center (just outside retainer)
 ant_tunnel_length = reservoir_id / 2 - ant_tunnel_start; // radial span: retainer edge to reservoir inner wall
@@ -101,8 +101,8 @@ ant_tunnel_length = reservoir_id / 2 - ant_tunnel_start; // radial span: retaine
 // ── Reservoir Skirt (flush outer shell when assembled) ───────────
 // Extends the reservoir OD to match station OD above the station rim.
 // In reservoir-local coords, starts where the station wall ends.
-skirt_od       = station_od;                                    // 90mm — flush with station
-skirt_id       = reservoir_id;                                  // 78mm — overlaps into reservoir wall to avoid gaps
+skirt_od       = station_od;                                    // 85mm — flush with station
+skirt_id       = reservoir_id;                                  // 73mm — overlaps into reservoir wall to avoid gaps
 skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 
