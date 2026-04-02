@@ -23,15 +23,28 @@ module reservoir() {
             }
             reservoir_bayonet_lugs();
             reservoir_ant_tunnels();
+            reservoir_grip_pad();  // rounded pad on top
         }
-        reservoir_scallops();  // applied last
+        reservoir_scallops();  // applied last, cuts through rounded pad
     }
+}
+
+// ── Grip Pad ─────────────────────────────────────────────────────
+// Minkowski'd disk on the reservoir top. Thin cylinder + sphere gives
+// a rounded-edge pad that the scallops cut through, so ridges between
+// grooves inherit the rounding.
+module reservoir_grip_pad() {
+    translate([0, 0, reservoir_height + mink_r])
+        minkowski() {
+            cylinder(h = 0.01, d = skirt_od - 2 * mink_r);
+            sphere(r = mink_r);
+        }
 }
 
 // ── Shell ─────────────────────────────────────────────────────────
 module reservoir_shell() {
     render_if_needed()
-        cylinder(h = reservoir_height + grip_pad, d = reservoir_od);
+        cylinder(h = reservoir_height, d = reservoir_od);
 }
 
 // ── Internal Cavity ───────────────────────────────────────────────
@@ -88,8 +101,8 @@ module reservoir_skirt() {
     render_if_needed()
         translate([0, 0, skirt_z_start])
             difference() {
-                cylinder(h = skirt_height + grip_pad, d = skirt_od);
-                cylinder(h = skirt_height + grip_pad, d = skirt_id);
+                cylinder(h = skirt_height, d = skirt_od);
+                cylinder(h = skirt_height, d = skirt_id);
             }
 }
 

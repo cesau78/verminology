@@ -22,16 +22,16 @@ module bait_station() {
             // Pin and hump added after cuts so the bore subtraction doesn't remove them
             station_push_pin();
             station_torus_hump();
+            station_grip_pad();  // rounded pad on bottom
         }
-        station_scallops();  // applied last
+        station_scallops();  // applied last, cuts through rounded pad
     }
 }
 
 // ── Solid Body ────────────────────────────────────────────────────
 module station_solid() {
     render_if_needed()
-        translate([0, 0, -grip_pad])
-            cylinder(h = station_height + grip_pad, d = station_od);
+        cylinder(h = station_height, d = station_od);
 }
 
 // ── Bore ──────────────────────────────────────────────────────────
@@ -186,6 +186,16 @@ module station_guard_holes() {
         translate([torus_groove_r, 0, guard_hole_z])
         rotate([0, 90, 0])
             cylinder(h = hole_length, d = guard_hole_dia);
+}
+
+// ── Grip Pad ─────────────────────────────────────────────────────
+// Minkowski'd disk on the station bottom. Mirrored from reservoir.
+module station_grip_pad() {
+    translate([0, 0, -mink_r - 0.01])
+        minkowski() {
+            cylinder(h = 0.01, d = station_od - 2 * mink_r);
+            sphere(r = mink_r);
+        }
 }
 
 // ── Grip Scallops ────────────────────────────────────────────────

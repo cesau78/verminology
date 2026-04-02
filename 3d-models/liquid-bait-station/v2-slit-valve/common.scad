@@ -116,7 +116,8 @@ scallop_count  = 12;   // number of spokes around circumference
 scallop_r      = 10.625; // cutting cylinder radius — 9mm groove width at 1mm depth
 scallop_cut    = 1;    // depth into top/bottom face at the rim corner (mm)
 scallop_pitch  = 15;   // degrees the spoke angles down from center to rim
-grip_pad       = 1;    // extra material above reservoir top / below station bottom (mm)
+mink_r         = 0.5;  // Minkowski sphere radius — rounds grip pad edges (mm)
+grip_pad       = mink_r * 2;  // total pad height = sphere diameter
 
 // ── Utility Modules ───────────────────────────────────────────────
 
