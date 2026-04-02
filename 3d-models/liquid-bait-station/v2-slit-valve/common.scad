@@ -113,7 +113,7 @@ strut_gap       = valve_bore_id / 2 + 2;  // stop short of valve bore center
 
 // ── Grip Scallops (radial spoke grooves for bayonet twist) ───────
 scallop_count  = 12;   // number of spokes around circumference
-scallop_r      = 5;    // cutting cylinder radius — controls groove width (mm)
+scallop_r      = 10.625; // cutting cylinder radius — 9mm groove width at 1mm depth
 scallop_cut    = 1;    // depth into top/bottom face at the rim corner (mm)
 scallop_pitch  = 15;   // degrees the spoke angles down from center to rim
 grip_pad       = 1;    // extra material above reservoir top / below station bottom (mm)
