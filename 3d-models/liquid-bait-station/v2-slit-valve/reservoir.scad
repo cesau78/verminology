@@ -18,6 +18,7 @@ module reservoir() {
             reservoir_skirt();
         }
         reservoir_ant_tunnel_cutouts();
+        reservoir_scallops();
     }
     reservoir_bayonet_lugs();
     reservoir_ant_tunnels();
@@ -127,6 +128,23 @@ module reservoir_ant_tunnel_cutouts() {
                     cylinder(h = ant_tunnel_length,
                              r1 = 0, r2 = ant_tunnel_r_in);
     }
+}
+
+// ── Grip Scallops ────────────────────────────────────────────────
+// Radial spoke cylinders from center, angled down 15°. The cylinder
+// is high above the part near center (no cut) and gradually intersects
+// the top face near the rim, cutting scallop_cut mm deep at the corner.
+module reservoir_scallops() {
+    spoke_len = skirt_od / 2 + scallop_r;
+    // Position so cylinder bottom = reservoir_height - scallop_cut at rim
+    z_start = reservoir_height - scallop_cut + scallop_r
+              + (skirt_od / 2) * tan(scallop_pitch);
+    for (i = [0 : scallop_count - 1])
+        rotate([0, 0, i * (360 / scallop_count)])
+            translate([0, 0, z_start])
+                rotate([0, scallop_pitch, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h = spoke_len, r = scallop_r);
 }
 
 // ── Render ────────────────────────────────────────────────────────

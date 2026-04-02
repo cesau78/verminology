@@ -111,6 +111,12 @@ strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned
 strut_thickness = 1;   // strut wall thickness (mm)
 strut_gap       = valve_bore_id / 2 + 2;  // stop short of valve bore center
 
+// ── Grip Scallops (radial spoke grooves for bayonet twist) ───────
+scallop_count  = 12;   // number of spokes around circumference
+scallop_r      = 5;    // cutting cylinder radius — controls groove width (mm)
+scallop_cut    = 1;    // depth into top/bottom face at the rim corner (mm)
+scallop_pitch  = 15;   // degrees the spoke angles down from center to rim
+
 // ── Utility Modules ───────────────────────────────────────────────
 
 module render_if_needed() {

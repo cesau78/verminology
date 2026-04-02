@@ -17,6 +17,7 @@ module bait_station() {
             station_central_pocket();
             station_bayonet_slots();
             station_guard_holes();
+            station_scallops();
         }
         // Pin and hump added after cuts so the bore subtraction doesn't remove them
         station_push_pin();
@@ -182,6 +183,22 @@ module station_guard_holes() {
         translate([torus_groove_r, 0, guard_hole_z])
         rotate([0, 90, 0])
             cylinder(h = hole_length, d = guard_hole_dia);
+}
+
+// ── Grip Scallops ────────────────────────────────────────────────
+// Radial spoke cylinders from center, angled up 15° (mirrored from
+// reservoir). Cuts scallop_cut mm into the bottom face at the rim.
+module station_scallops() {
+    spoke_len = station_od / 2 + scallop_r;
+    // Position so cylinder top = scallop_cut at rim
+    z_start = scallop_cut - scallop_r
+              - (station_od / 2) * tan(scallop_pitch);
+    for (i = [0 : scallop_count - 1])
+        rotate([0, 0, i * (360 / scallop_count)])
+            translate([0, 0, z_start])
+                rotate([0, -scallop_pitch, 0])
+                    rotate([0, 90, 0])
+                        cylinder(h = spoke_len, r = scallop_r);
 }
 
 // ── Render ────────────────────────────────────────────────────────
