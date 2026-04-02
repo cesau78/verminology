@@ -7,28 +7,31 @@ include <common.scad>
 
 // ── Main Assembly ─────────────────────────────────────────────────
 module bait_station() {
-    union() {
-        difference() {
-            station_solid();
-            station_bore();
-            station_torus_groove();
-            station_inner_groove();
-            station_drain_channels();
-            station_central_pocket();
-            station_bayonet_slots();
-            station_guard_holes();
-            station_scallops();
+    difference() {
+        union() {
+            difference() {
+                station_solid();
+                station_bore();
+                station_torus_groove();
+                station_inner_groove();
+                station_drain_channels();
+                station_central_pocket();
+                station_bayonet_slots();
+                station_guard_holes();
+            }
+            // Pin and hump added after cuts so the bore subtraction doesn't remove them
+            station_push_pin();
+            station_torus_hump();
         }
-        // Pin and hump added after cuts so the bore subtraction doesn't remove them
-        station_push_pin();
-        station_torus_hump();
+        station_scallops();  // applied last
     }
 }
 
 // ── Solid Body ────────────────────────────────────────────────────
 module station_solid() {
     render_if_needed()
-        cylinder(h = station_height, d = station_od);
+        translate([0, 0, -grip_pad])
+            cylinder(h = station_height + grip_pad, d = station_od);
 }
 
 // ── Bore ──────────────────────────────────────────────────────────
@@ -193,8 +196,9 @@ module station_scallops() {
     // Position so cylinder top = scallop_cut at rim
     z_start = scallop_cut - scallop_r
               - (station_od / 2) * tan(scallop_pitch);
+    scallop_offset = 360 / guard_hole_count / 2;  // half-step from ant holes
     for (i = [0 : scallop_count - 1])
-        rotate([0, 0, i * (360 / scallop_count)])
+        rotate([0, 0, scallop_offset + i * (360 / scallop_count)])
             translate([0, 0, z_start])
                 rotate([0, -scallop_pitch, 0])
                     rotate([0, 90, 0])

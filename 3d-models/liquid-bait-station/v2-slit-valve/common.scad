@@ -116,6 +116,7 @@ scallop_count  = 12;   // number of spokes around circumference
 scallop_r      = 5;    // cutting cylinder radius — controls groove width (mm)
 scallop_cut    = 1;    // depth into top/bottom face at the rim corner (mm)
 scallop_pitch  = 15;   // degrees the spoke angles down from center to rim
+grip_pad       = 1;    // extra material above reservoir top / below station bottom (mm)
 
 // ── Utility Modules ───────────────────────────────────────────────
 

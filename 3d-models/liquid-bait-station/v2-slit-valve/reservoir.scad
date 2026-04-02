@@ -10,24 +10,28 @@ module reservoir() {
     difference() {
         union() {
             difference() {
-                reservoir_shell();
-                reservoir_cavity();
-                reservoir_valve_bore();
+                union() {
+                    difference() {
+                        reservoir_shell();
+                        reservoir_cavity();
+                        reservoir_valve_bore();
+                    }
+                    reservoir_struts();
+                    reservoir_skirt();
+                }
+                reservoir_ant_tunnel_cutouts();
             }
-            reservoir_struts();
-            reservoir_skirt();
+            reservoir_bayonet_lugs();
+            reservoir_ant_tunnels();
         }
-        reservoir_ant_tunnel_cutouts();
-        reservoir_scallops();
+        reservoir_scallops();  // applied last
     }
-    reservoir_bayonet_lugs();
-    reservoir_ant_tunnels();
 }
 
 // ── Shell ─────────────────────────────────────────────────────────
 module reservoir_shell() {
     render_if_needed()
-        cylinder(h = reservoir_height, d = reservoir_od);
+        cylinder(h = reservoir_height + grip_pad, d = reservoir_od);
 }
 
 // ── Internal Cavity ───────────────────────────────────────────────
@@ -84,8 +88,8 @@ module reservoir_skirt() {
     render_if_needed()
         translate([0, 0, skirt_z_start])
             difference() {
-                cylinder(h = skirt_height, d = skirt_od);
-                cylinder(h = skirt_height, d = skirt_id);
+                cylinder(h = skirt_height + grip_pad, d = skirt_od);
+                cylinder(h = skirt_height + grip_pad, d = skirt_id);
             }
 }
 
@@ -139,8 +143,9 @@ module reservoir_scallops() {
     // Position so cylinder bottom = reservoir_height - scallop_cut at rim
     z_start = reservoir_height - scallop_cut + scallop_r
               + (skirt_od / 2) * tan(scallop_pitch);
+    scallop_offset = 360 / guard_hole_count / 2;  // half-step from ant holes
     for (i = [0 : scallop_count - 1])
-        rotate([0, 0, i * (360 / scallop_count)])
+        rotate([0, 0, scallop_offset + i * (360 / scallop_count)])
             translate([0, 0, z_start])
                 rotate([0, scallop_pitch, 0])
                     rotate([0, 90, 0])
