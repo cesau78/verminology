@@ -43,16 +43,19 @@ module needle_insert_retention_clips() {
     h_barb = needle_insert_clip_top_barb_h_mm;
     apex_r = needle_insert_clip_top_barb_apex_radial_mm;
     z_step = needle_insert_base_bottom_h;
-    z0 = needle_insert_clip_z0_above_gasket_step_mm;
+    z0 = needle_insert_clip_z0_above_gasket_step_mm + needle_insert_clip_stem_bottom_trim_mm;
     z_body_top = needle_insert_clip_body_z_top - z_step;
+    z_barb_base = z_body_top - needle_insert_clip_top_barb_drop_mm;
+    ri = needle_insert_clip_retention_radial_inset_mm;
+    assert(z_barb_base > z0 + 0.05, "barb drop too large vs stem height");
     for (i = [0 : needle_insert_clip_count - 1])
         rotate([0, 0, needle_insert_clip_phase_deg + i * (360 / needle_insert_clip_count)])
             render_if_needed()
                 translate([0, 0, z_step])
                     union() {
-                        translate([R - L, -w / 2, z0])
-                            cube([L, w, z_body_top - z0]);
-                        translate([R - L, 0, z_body_top])
+                        translate([R - L - ri, -w / 2, z0])
+                            cube([L, w, z_barb_base - z0]);
+                        translate([R - L - ri, 0, z_barb_base])
                             needle_insert_retention_clip_top_barb(L, w, h_barb, apex_r);
                     }
 }
@@ -107,15 +110,17 @@ module needle_insert_pocket() {
     r_body = needle_insert_base_bottom_od / 2 + c;
     r_barb = needle_insert_retention_clips_enabled
         ? needle_insert_gasket_land_od / 2 + needle_insert_clip_top_barb_apex_radial_mm + c
+            - needle_insert_clip_retention_radial_inset_mm
         : 0;
     r_need = max(r_body, r_barb);
     r_cap = inner_bait_barrier_od / 2 - needle_insert_pocket_inner_barrier_min_wall_mm;
     r_clip = min(r_need, r_cap);
     assert(r_need <= r_cap + 0.02, "needle pocket exceeds inner barrier OD cap — reduce barb apex or slope");
     z_barb = needle_insert_retention_clips_enabled ? needle_insert_clip_top_barb_h_mm : 0;
+    z_drop = needle_insert_retention_clips_enabled ? needle_insert_clip_top_barb_drop_mm : 0;
     z_clip_top = max(
         inner_barrier_rail_z_top + 0.08,
-        needle_insert_clip_body_z_top + z_barb + needle_insert_pocket_z_above_clip_post_mm);
+        needle_insert_clip_body_z_top - z_drop + z_barb + needle_insert_pocket_z_above_clip_post_mm);
     translate([0, 0, -0.02])
         union() {
             cylinder(h = z_clip_top + 0.02 + ze, r = r_clip);

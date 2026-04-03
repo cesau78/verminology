@@ -158,7 +158,8 @@ inner_barrier_rail_z_bot = station_floor - inner_barrier_rail_extend_below_floor
 // Insertion: align each clip with the vertical slot between the two rails at that site (6-fold symmetry).
 needle_insert_clip_count = inner_bait_barrier_hole_count;
 needle_insert_clip_phase_deg = inner_barrier_rail_phase_deg;
-needle_insert_clip_z0_above_gasket_step_mm = 0.25;   // local Z above top of first cylinder (start of upper step)
+needle_insert_clip_z0_above_gasket_step_mm = 0.25;   // local Z above top of first cylinder (nominal stem start on upper step)
+needle_insert_clip_stem_bottom_trim_mm     = 0.2;    // raise stem start (+Z): shorter stem for interference; barb top unchanged
 needle_insert_clip_anchor_depth_mm = 0.4;    // root into disk, inside nominal OD
 needle_insert_clip_stem_radial_mm    = 0.7;   // flex leg: inner extent from OD toward axis (mm)
 needle_insert_clip_tangent_width_mm  = 2.1;   // fits between paired rails at each site
@@ -168,7 +169,9 @@ needle_insert_clip_body_z_top = inner_barrier_rail_z_top - needle_insert_clip_sh
 needle_insert_clip_top_barb_seg_h_mm    = 1;   // vertical per leg (half of total barb height)
 needle_insert_clip_top_barb_slope_deg   = 60;  // ramp angle from horizontal; apex radial = seg_h / tan(slope)
 needle_insert_clip_top_barb_h_mm        = 2 * needle_insert_clip_top_barb_seg_h_mm;
+needle_insert_clip_top_barb_drop_mm     = 0.2;  // barb base −Z vs nominal stem top (stem shortened to meet barb)
 needle_insert_clip_top_barb_apex_radial_mm = needle_insert_clip_top_barb_seg_h_mm / tan(needle_insert_clip_top_barb_slope_deg);
+needle_insert_clip_retention_radial_inset_mm = 0.1;  // whole post + barb shifted toward axis; peak radius = land_r + apex − inset
 // Pocket radius must stay inside inner barrier ring OD or the subtract wipes the wall — see needle_insert_pocket().
 needle_insert_pocket_inner_barrier_min_wall_mm = 0.12;  // min radial solid left on inner bait barrier ring (OD side)
 needle_insert_pocket_z_above_clip_post_mm  = 0.12;  // wide pocket stage clears post + barb (wider than pin column)
