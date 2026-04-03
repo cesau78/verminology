@@ -25,6 +25,7 @@ module bait_station() {
             station_torus_hump();
         }
         station_side_scallops();
+        part_bottom_info_stamp_deboss(station_stamp_bottom, station_od);
     }
 }
 

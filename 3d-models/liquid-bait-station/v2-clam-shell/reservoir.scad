@@ -30,7 +30,6 @@ module reservoir() {
     }
 }
 
-
 // ── Shell ─────────────────────────────────────────────────────────
 module reservoir_shell() {
     render_if_needed()

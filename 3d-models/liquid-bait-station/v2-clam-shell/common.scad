@@ -3,16 +3,28 @@
 // A central push-pin spreads the TPU slit valve open when reservoir is seated.
 
 // ── Performance Settings ──────────────────────────────────────────
-preview = false; // true = faster preview; false = full detail render
+// mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
+mesh_preview = true;
 crosssection_view = false;  // cut the model along a plane to inspect internals
-crosssection_axis = "x";   // axis: "x", "y", or "z"
-crosssection_pos  = 10;     // position (mm) along the chosen axis
+crosssection_axis = "y";   // axis: "x", "y", or "z"
+crosssection_pos  = 0;     // position (mm) along the chosen axis
 
-$fn = preview ? 32 : 64;
+$fn = mesh_preview ? 32 : 64;
 
 // ── General ───────────────────────────────────────────────────────
 wall      = 2;     // shell wall thickness (mm)
 clearance = 0.2;   // general fit clearance for mating parts (mm)
+
+// ── Target print profile (layer-aligned deboss on bed-contact faces) ─
+// Match your slicer: initial layer vs normal layers. Deboss depth is one
+// nominal first-layer stack plus N full layers above — reads cleanly in
+// preview layers without eating too much floor (keep < wall).
+print_initial_layer_h = 0.2;   // first layer height (mm)
+print_layer_h         = 0.16;  // layer height after first (mm)
+print_deboss_layers_after_first = 3;  // full layers of depth past the first
+reservoir_bottom_deboss_depth =
+    print_initial_layer_h + print_deboss_layers_after_first * print_layer_h;
+// e.g. 0.2 + 3×0.16 = 0.68 mm
 
 // ── Reservoir ─────────────────────────────────────────────────────
 reservoir_od       = 77;                          // outer diameter (mm) — 3×3 on 256mm plate
@@ -144,10 +156,87 @@ clip_notch_z    = clip_bottom_z;  // notch at the barb's seated position
 // ── Edge Fillet ──────────────────────────────────────────────────
 fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
 
+// ── Info stamp (bottom / bed face) ────────────────────────────────
+// Lines and per-part flags: ../stamp_generated.scad (product-level; export script writes it).
+res_bottom_mark_size            = 5;    // line 1 (brand)
+res_bottom_mark_size_secondary  = 3;    // lines 2–3 (product, version)
+// Center-to-center spacing: lines 2–3 tight; lines 1–2 wider (rule sits halfway in that band).
+res_bottom_mark_gap_2_3 =
+    res_bottom_mark_size_secondary * 1.25;
+res_bottom_mark_gap_extra_brand_to_product = 2.5; // extra mm between line 1 and line 2 vs 2–3
+res_bottom_mark_gap_1_2 = res_bottom_mark_gap_2_3 + res_bottom_mark_gap_extra_brand_to_product;
+// Rule under line 1: thickness tracks brand size (≈ bold “Y” stem); length from left edge of word to near final “y” tail.
+// OpenSCAD 2021 has no textmetrics — advance is estimated from len × size × factor (tune for font/string).
+res_bottom_mark_rule_adv_per_char   = 0.78;   // × line1 size → total width scale (Liberation Sans Bold)
+res_bottom_mark_rule_stroke_scale   = 0.132;  // rule thickness = line1 size × this (match stem weight)
+res_bottom_mark_rule_right_inset    = 0.40;   // × (adv/n_chars): shorten from right to meet “y” descender
+// Shift whole stamp along +Y: fraction × part_od = distance from disc center toward rim (0.25 → mid-radius).
+res_bottom_mark_radial_shift_fraction = 0.25;
+res_bottom_mark_font     = "Liberation Sans:style=Bold";
+
+include <../stamp_generated.scad>
+
+// Deboss up to three lines on exterior bottom (Z=0). part_od = flat OD; stamp shifted +Y toward mid-radius.
+// Lines 1–3 from stamp_generated.scad: brand, product, version (+ Prototype when preview).
+module part_bottom_info_stamp_deboss(enable, part_od) {
+    depth = reservoir_bottom_deboss_depth + 0.02;
+    y1 = res_bottom_mark_gap_1_2;
+    y2 = 0;
+    y3 = -res_bottom_mark_gap_2_3;
+    ys = [y1, y2, y3];
+    stamp_shift_y = part_od * res_bottom_mark_radial_shift_fraction;
+    has_any = info_stamp_line1 != "" || info_stamp_line2 != "" || info_stamp_line3 != "";
+    if (enable && has_any) {
+        // Text is authored in +Z-down convention; exterior bottom is read from below (−Z) → mirror X.
+        translate([0, stamp_shift_y, -0.01])
+            mirror([1, 0, 0]) {
+                if (info_stamp_line1 != "")
+                    linear_extrude(depth)
+                        translate([0, ys[0], 0])
+                            text(info_stamp_line1,
+                                 size = res_bottom_mark_size,
+                                 font = res_bottom_mark_font,
+                                 halign = "center",
+                                 valign = "center");
+                if (info_stamp_line1 != "" && info_stamp_line2 != "")
+                    linear_extrude(depth)
+                        translate([0, y1 / 2, 0])
+                            let (
+                                nch = max(len(info_stamp_line1), 1),
+                                adv = len(info_stamp_line1) * res_bottom_mark_size *
+                                    res_bottom_mark_rule_adv_per_char,
+                                cw = adv / nch,
+                                rule_t = max(0.32, res_bottom_mark_size * res_bottom_mark_rule_stroke_scale),
+                                x0 = -adv / 2,
+                                x1 = adv / 2 - cw * res_bottom_mark_rule_right_inset
+                            )
+                                if (x1 > x0 + 1)
+                                    translate([(x0 + x1) / 2, 0, 0])
+                                        square([x1 - x0, rule_t], center = true);
+                if (info_stamp_line2 != "")
+                    linear_extrude(depth)
+                        translate([0, ys[1], 0])
+                            text(info_stamp_line2,
+                                 size = res_bottom_mark_size_secondary,
+                                 font = res_bottom_mark_font,
+                                 halign = "center",
+                                 valign = "center");
+                if (info_stamp_line3 != "")
+                    linear_extrude(depth)
+                        translate([0, ys[2], 0])
+                            text(info_stamp_line3,
+                                 size = res_bottom_mark_size_secondary,
+                                 font = res_bottom_mark_font,
+                                 halign = "center",
+                                 valign = "center");
+            }
+    }
+}
+
 // ── Utility Modules ───────────────────────────────────────────────
 
 module render_if_needed() {
-    if (!preview) render() children();
+    if (!mesh_preview) render() children();
     else children();
 }
 
