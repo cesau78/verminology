@@ -17,6 +17,7 @@ module bait_station() {
                 station_drain_channels();
                 station_central_pocket();
                 station_tab_slots();
+                station_clip_grooves();
                 station_guard_holes();
             }
             // Pin and hump added after cuts so the bore subtraction doesn't remove them
@@ -24,7 +25,6 @@ module bait_station() {
             station_torus_hump();
         }
         station_side_scallops();
-        station_bottom_fillet();
     }
 }
 
@@ -141,17 +141,49 @@ module station_tab_slots() {
     }
 }
 
+// ── Retention Clip Grooves ────────────────────────────────────────
+// Curved channels cut into the station's outer wall for the
+// reservoir's retention clips to slide into. A deeper notch at the
+// seated position lets the barb snap in. Offset 60° from tab slots.
+module station_clip_grooves() {
+    tab_offset = 360 / tab_count / 2;  // 60° from guide tabs
+    groove_d   = clip_t + clearance;    // radial depth into outer wall
+    groove_ang = (clip_w + clearance * 2) / (PI * station_od) * 360;
+    // Notch: deeper pocket for the barb to snap into
+    notch_d    = clip_t + clip_barb_d + clearance;
+    notch_h    = clip_barb_h + clearance * 2;
+
+    for (i = [0 : clip_count - 1]) {
+        a = tab_offset + i * (360 / clip_count);
+        rotate([0, 0, a]) {
+            // Vertical groove — open at top, arc channel into outer wall
+            translate([0, 0, clip_notch_z + notch_h])
+                arc_shell(clip_r + 1, clip_r - groove_d,
+                          station_height - clip_notch_z - notch_h + 1, groove_ang);
+            // Snap notch — deeper arc pocket at the bottom for barb
+            translate([0, 0, clip_notch_z])
+                arc_shell(clip_r + 1, clip_r - notch_d,
+                          notch_h, groove_ang);
+        }
+    }
+}
+
 // ── Guard Holes ───────────────────────────────────────────────────
 // Small holes through the outer wall for ant access to the torus groove.
 // Positioned at the lower part of the groove where liquid collects.
 module station_guard_holes() {
     hole_length = station_od / 2 - torus_groove_r + 1;
+    // Indices to skip: clip grooves at 60°, 180°, 300°
+    // = indices 2, 6, 10 at 30° spacing (360/12)
+    skip = guard_hole_count / clip_count;  // every 4th hole
+    skip_start = round((360 / tab_count / 2) / (360 / guard_hole_count));  // index 2
 
     for (i = [0 : guard_hole_count - 1])
-        rotate([0, 0, i * (360 / guard_hole_count)])
-        translate([torus_groove_r, 0, guard_hole_z])
-        rotate([0, 90, 0])
-            cylinder(h = hole_length, d = guard_hole_dia);
+        if ((i - skip_start) % skip != 0)
+            rotate([0, 0, i * (360 / guard_hole_count)])
+                translate([torus_groove_r, 0, guard_hole_z])
+                    rotate([0, 90, 0])
+                        cylinder(h = hole_length, d = guard_hole_dia);
 }
 
 // ── Side Grip Scallops ───────────────────────────────────────────
@@ -164,12 +196,6 @@ module station_side_scallops() {
             translate([station_od / 2, 0, station_scallop_z])
                 scale([scallop_depth, scallop_width / 2, scallop_height / 2])
                     sphere(r = 1);
-}
-
-// ── Bottom Edge Fillet ────────────────────────────────────────────
-// 2mm quarter-round on the bottom outer edge.
-module station_bottom_fillet() {
-    edge_round(station_od, fillet_r);
 }
 
 // ── Render ────────────────────────────────────────────────────────

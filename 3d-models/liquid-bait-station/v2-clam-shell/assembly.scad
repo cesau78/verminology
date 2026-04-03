@@ -5,7 +5,7 @@
 include <common.scad>
 use <station.scad>
 use <reservoir.scad>
-use <slit-valve.scad>
+use <needle-seal.scad>
 
 // ── Settings ──────────────────────────────────────────────────────
 exploded   = false;  // spread parts vertically for inspection
@@ -30,22 +30,14 @@ crosssection(station_od * 2) {
     color("SlateGray", 0.8)
         bait_station();
 
-    // Pin shaft — distinct color for inspection
-    color("Gold", 0.9)
-        difference() { station_push_pin_shaft(); station_push_pin_channels(); }
-
-    // Pin cone — distinct color for inspection
-    color("OrangeRed", 0.9)
-        difference() { station_push_pin_cone(); station_push_pin_channels(); }
-
     // Reservoir — drops straight into station bore
     color("SteelBlue", 0.8)
         translate([0, 0, res_z_final])
             reservoir();
 
-    // Slit valve — flange, disk, and retention ring
+    // Needle seal — flange, disk, and retention ring
     if (show_valve)
         color("LimeGreen", 0.9)
             translate([0, 0, valve_z])
-                slit_valve();
+                needle_seal();
 }

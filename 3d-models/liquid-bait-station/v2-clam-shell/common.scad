@@ -33,9 +33,6 @@ valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
 slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
-// ── Needle Seal (slit-free variant — TPU interference fit around pin) ─
-seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
-
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85;   // outer diameter (mm) — 3×3 on 256mm plate (3×85=255)
 station_floor  = 5;    // floor thickness — deep enough for torus groove
@@ -55,6 +52,9 @@ station_height   = 18;   // total height — raised 3mm for higher reservoir sea
 // ── Push Pin / Straw (station center, spreads valve slits on lock) ─
 pin_dia         = 6;   // pin outer diameter (mm) — smaller than slit_length for proper spread
 pin_penetration = 3;   // mm past valve top when fully locked — enough to clear valve reliably
+
+// ── Needle Seal (slit-free variant — TPU interference fit around pin) ─
+seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)
 pin_tunnel_count = 3;  // cross-tunnels at base for fluid drainage (120° apart)
@@ -121,6 +121,26 @@ station_scallop_z   = scallop_center_z;                      // station starts a
 reservoir_scallop_z = scallop_center_z - reservoir_seat;      // reservoir-local coords
 scallop_offset      = 360 / guard_hole_count / 2;            // half-step from ant holes
 
+// ── Retention Clips (snap-fit lock between skirt and station) ────
+// Flexible arms hang down from the skirt inner face into grooves
+// in the station bore wall. Angled barb snaps into a notch when
+// seated — easy to push in, very difficult to pull apart.
+clip_count      = 3;     // same as tab_count, offset 60° from tabs
+clip_w          = 4;     // circumferential width (mm)
+clip_t          = 1.5;   // radial thickness of the arm (mm)
+clip_length     = station_height;  // arm extends to station floor (mm)
+clip_barb_d     = 0.4;   // barb protrusion beyond arm thickness (mm) — PETG flex limit
+clip_ramp_angle = 30;    // ramp angle from arm surface (degrees) — printable slope
+clip_barb_h     = 2 * clip_barb_d / tan(clip_ramp_angle);  // diamond height from angle
+// Clip outer face is flush with skirt OD (= station OD).
+// Channels cut into the station's outer wall surface.
+clip_r          = station_od / 2;  // outer face radius of clip arm
+clip_angle      = clip_w / (PI * station_od) * 360;  // angular span (degrees)
+// Notch z in station coords: clips are fully seated when reservoir is at reservoir_seat.
+// Clip bottom in station coords = reservoir_seat + skirt_z_start - clip_length
+clip_bottom_z   = reservoir_seat + skirt_z_start - clip_length;  // 6mm
+clip_notch_z    = clip_bottom_z;  // notch at the barb's seated position
+
 // ── Edge Fillet ──────────────────────────────────────────────────
 fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
 
@@ -143,6 +163,17 @@ module edge_round(od, r) {
                     translate([0, r])
                         circle(r = r);
                 }
+}
+
+// Arc-shaped shell segment via rotate_extrude — lightweight CSG.
+// Sweeps a rectangular cross-section (r_inner to r_outer) through
+// ang degrees. Starts at +X, sweeps toward +Y.
+// Rotate the result to center it or place at any angle.
+module arc_shell(r_outer, r_inner, h, ang) {
+    rotate([0, 0, -ang / 2])
+        rotate_extrude(angle = ang)
+            translate([r_inner, 0])
+                square([r_outer - r_inner, h]);
 }
 
 module crosssection(extent) {

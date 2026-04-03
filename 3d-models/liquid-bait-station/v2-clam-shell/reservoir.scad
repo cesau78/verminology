@@ -23,6 +23,7 @@ module reservoir() {
             }
             reservoir_tabs();
             reservoir_ant_tunnels();
+            reservoir_retention_clips();
         }
         reservoir_side_scallops();
         reservoir_top_fillet();
@@ -154,6 +155,32 @@ module reservoir_top_fillet() {
     translate([0, 0, reservoir_height])
         mirror([0, 0, 1])
             edge_round(skirt_od, fillet_r);
+}
+
+// ── Retention Clips ──────────────────────────────────────────────
+// Flexible arms hanging down from the skirt inner face. Each arm
+// has an inward-facing barb at the bottom: ramped on the bottom
+// edge (slides in easily) and flat on top (resists pull-out).
+// Offset 60° from guide tabs so they don't share slots.
+module reservoir_retention_clips() {
+    tab_offset = 360 / tab_count / 2;  // 60° offset from guide tabs
+    for (i = [0 : clip_count - 1]) {
+        a = tab_offset + i * (360 / clip_count);
+        rotate([0, 0, a])
+            translate([0, 0, skirt_z_start - clip_length]) {
+                // Curved arm — arc shell flush with skirt OD
+                arc_shell(clip_r, clip_r - clip_t, clip_length, clip_angle);
+                // Barb — pointed D-shape: ramps out at 30° to max
+                // protrusion at midpoint, mirrors back to arm thickness
+                rotate([0, 0, -clip_angle / 2])
+                    rotate_extrude(angle = clip_angle)
+                        polygon([
+                            [clip_r - clip_t, 0],
+                            [clip_r - clip_t - clip_barb_d, clip_barb_h / 2],
+                            [clip_r - clip_t, clip_barb_h]
+                        ]);
+            }
+    }
 }
 
 // ── Render ────────────────────────────────────────────────────────
