@@ -80,10 +80,6 @@ inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
 needle_insert_disk_od_clearance_dia = 0.2;   // base OD = center hole ID − this (diametric mm)
 needle_insert_disk_od       = inner_bait_barrier_id - needle_insert_disk_od_clearance_dia;
-// Annulus in floor slab under center hole: OD = hole ID, 1 mm wide toward center, 1 mm tall; notches between guide rails in lip.
-center_hole_floor_ring_h_mm           = 1;
-center_hole_floor_ring_inward_mm      = 1;
-center_hole_floor_ring_below_floor_mm = 1;   // z = station_floor − this to z = station_floor
 
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;
@@ -99,15 +95,20 @@ pin_channel_dia = 3;   // internal fluid channel diameter (mm)
 // aggressive enough for foil yet printable; tiny land at apex (pin_tip_od > channel) avoids a zero-thickness point.
 pin_tip_taper_h = 3;   // mm — length of outer taper from full pin_dia
 pin_tip_od      = pin_channel_dia + 0.6;   // mm at apex (~0.3 mm wall each side for FDM)
-// Lateral bore: top tangent flush with bottom of needle seal flange (assembled: valve_z = reservoir_seat − valve_flange_h).
-pin_tunnel_z     = reservoir_seat - valve_flange_h - pin_channel_dia / 2;
-// Lateral bore: start past far side of pin OD so it reads as a full through-hole; end inside barrier ID
-pin_tunnel_face_inset  = 0.25;   // mm past outer pin surface (clean boolean)
-pin_tunnel_barrier_inset = 1;    // mm inside bait barrier inner radius
-pin_tunnel_x_start   = -pin_dia / 2 - pin_tunnel_face_inset;
-pin_tunnel_x_end     = bait_barrier_id / 2 - pin_tunnel_barrier_inset;
-pin_tunnel_reach     = pin_tunnel_x_end - pin_tunnel_x_start;
-pin_tunnel_x_center  = (pin_tunnel_x_start + pin_tunnel_x_end) / 2;  // axis through pin center (symmetric both sides)
+// Lateral bore Z: prefer top tangent at seal flange; cap keeps tunnel from slicing down through base top (z = disk_h).
+pin_tunnel_z_seal_align = reservoir_seat - valve_flange_h - pin_channel_dia / 2;
+// Center height so bottom tangent ≈ disk top — lateral sits mostly in pin shank, not through upper base slab.
+pin_tunnel_z_max_center = needle_insert_disk_h + pin_channel_dia / 2;
+pin_tunnel_z            = min(pin_tunnel_z_seal_align, pin_tunnel_z_max_center);
+// Lateral bore: start past far side of pin OD; end inside inner bait barrier *center hole* ID (not outer bait ring).
+pin_tunnel_face_inset    = 0.25;   // mm past outer pin surface (clean boolean)
+pin_tunnel_barrier_inset = 1.2;    // mm inside inner barrier hole radius (shorten +X cut vs wall)
+pin_tunnel_x_start       = -pin_dia / 2 - pin_tunnel_face_inset;
+pin_tunnel_x_end         = inner_bait_barrier_id / 2 - pin_tunnel_barrier_inset;
+pin_tunnel_reach         = pin_tunnel_x_end - pin_tunnel_x_start;
+pin_tunnel_x_center      = (pin_tunnel_x_start + pin_tunnel_x_end) / 2;
+// Axial channel: lowest z = bottom tangent of lateral (no bore below that through insert bed).
+pin_channel_z_bottom     = pin_tunnel_z - pin_channel_dia / 2;
 
 // ── Needle base TPU gasket (90A) — circumferential groove on base OD, toroidal ring ──
 // Groove: 2 mm tall on the side; radial depth ≤ ~1 mm (TPU stretch around circumference). Lands above/below on OD.
@@ -138,13 +139,8 @@ inner_barrier_rail_y_offset_mm = 2;     // tangential center from axis (±)
 inner_barrier_rail_fill_width_mm = 3;   // tangential span of filler between rails (mm)
 inner_barrier_rail_fill_inward_mm = 1; // filler depth toward center (mm)
 inner_barrier_rail_height_trim_mm = 3; // shorten rails + filler from top (mm); clears inner wall top lip
-inner_barrier_rail_extend_below_floor_mm = 1; // grow downward from tray floor to meet needle lip (mm)
-// Notch on hole-side of lip only: 1 mm into ring from inner cyl; wider tangential cut clears inner arc in preview.
-center_hole_lip_notch_into_lip_mm   = 1;    // from inner surface of lip outward into ring solid only
-center_hole_lip_notch_into_void_mm  = 2.5;  // box extends toward center (widens cut with lip_in for visibility)
-center_hole_lip_notch_inner_overlap_mm = 0.08; // nudge past ri so booleans shave inner cylinder cleanly
-center_hole_lip_notch_tangent_extra_mm = 1.0;  // extra tangential span vs rail gap (inner curve opens more)
-center_hole_lip_notch_z_overshoot_mm = 0.08;
+inner_barrier_rail_extend_below_floor_mm = 1; // grow downward from tray floor toward needle pocket (mm)
+inner_barrier_rail_z_offset_mm  = 1;   // shift whole rail + filler stack +Z (mm)
 
 // Computed pin height (from station z=0) — apex flush with top of needle seal disk (not retention barb)
 // Needle insert: base OD = inner barrier center hole ID; coaxial pocket; pin apex at pin_top.

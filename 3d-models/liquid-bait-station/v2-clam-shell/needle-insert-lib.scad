@@ -37,8 +37,11 @@ module needle_gasket_ring() {
 }
 
 module needle_insert_channels() {
-    translate([0, 0, -0.5])
-        cylinder(h = pin_top + 1, d = pin_channel_dia);
+    // Vertical: from bottom of lateral port up (not through z=0 below lateral).
+    vb = max(0, pin_channel_z_bottom);
+    vh = pin_top + 0.5 - vb;
+    translate([0, 0, vb])
+        cylinder(h = vh, d = pin_channel_dia);
     translate([pin_tunnel_x_center, 0, pin_tunnel_z])
         rotate([0, 90, 0])
             cylinder(h = pin_tunnel_reach, d = pin_channel_dia, center = true);

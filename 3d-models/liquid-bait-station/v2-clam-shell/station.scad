@@ -25,10 +25,8 @@ module bait_station() {
             station_side_scallops();
             part_bottom_info_stamp_deboss(station_stamp_bottom, station_od);
         }
-        // Rails + floor ring extend into needle pocket region; union after pocket so they are not subtracted.
+        // Rails extend into needle pocket region; union after pocket so they are not subtracted.
         station_inner_barrier_rails();
-        color("red")
-            station_center_hole_floor_ring();
     }
 }
 
@@ -85,14 +83,14 @@ module station_inner_barrier_wall_holes() {
 }
 
 // Two 1 mm-wide rails per site (tangential ±Y), 2 mm inward from inner barrier ID.
-// Filler between rails: same vertical span. Top fixed below barrier top; bottom extends to needle-insert lip.
+// Filler between rails: same vertical span. Top fixed below barrier top; bottom extends below tray floor.
 module station_inner_barrier_rails() {
     w = inner_barrier_rail_width_mm;
     rin = inner_barrier_rail_inward_mm;
     yo = inner_barrier_rail_y_offset_mm;
     id2 = inner_bait_barrier_id / 2;
-    z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm;
-    z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm;
+    z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm + inner_barrier_rail_z_offset_mm;
+    z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm + inner_barrier_rail_z_offset_mm;
     zh = z_top - z_bot;
     zc = z_bot + zh / 2;
     // +X local = outward; rail occupies x in [id2 - rin, id2], centered at id2 - rin/2
@@ -106,47 +104,6 @@ module station_inner_barrier_rails() {
             rf = inner_barrier_rail_fill_inward_mm;
             translate([id2 - rf / 2, 0, zc])
                 cube([rf, nw, zh], center = true);
-        }
-}
-
-// One notch per site between rails: hole-side only — 1 mm into ring solid; box reaches inward past ri for clean arc cut.
-module station_center_hole_lip_guide_notches() {
-    h = center_hole_floor_ring_h_mm;
-    rin = center_hole_floor_ring_inward_mm;
-    zb = station_floor - center_hole_floor_ring_below_floor_mm;
-    ro = inner_bait_barrier_id / 2;
-    ri = ro - rin;
-    lip_in = center_hole_lip_notch_into_lip_mm;
-    d_void = center_hole_lip_notch_into_void_mm;
-    ov = center_hole_lip_notch_inner_overlap_mm;
-    // Local +X outward: inner face of box at ri - d_void - ov (only ri..ri+lip_in overlaps ring solid).
-    dr = lip_in + d_void + ov;
-    xc = ri + (lip_in - d_void - ov) / 2;
-    dz = h + center_hole_lip_notch_z_overshoot_mm;
-    w = inner_barrier_rail_fill_width_mm + center_hole_lip_notch_tangent_extra_mm;
-    zc = zb + h / 2;
-    for (i = [0 : inner_bait_barrier_hole_count - 1])
-        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)])
-            translate([xc, 0, zc])
-                cube([dr, w, dz], center = true);
-}
-
-// Annulus in floor: OD = inner barrier hole ID, inward 1 mm, 1 mm tall; one notch between rails per site on hole side.
-module station_center_hole_floor_ring() {
-    h = center_hole_floor_ring_h_mm;
-    rin = center_hole_floor_ring_inward_mm;
-    zb = station_floor - center_hole_floor_ring_below_floor_mm;
-    ro = inner_bait_barrier_id / 2;
-    ri = ro - rin;
-    render_if_needed()
-        difference() {
-            translate([0, 0, zb])
-                difference() {
-                    cylinder(h = h, r = ro);
-                    translate([0, 0, -0.01])
-                        cylinder(h = h + 0.02, r = ri);
-                }
-            station_center_hole_lip_guide_notches();
         }
 }
 
