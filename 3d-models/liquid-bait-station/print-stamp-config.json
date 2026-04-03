@@ -20,6 +20,11 @@
       "stamp": null
     },
     {
+      "scad": "v2-clam-shell/needle-gasket-export.scad",
+      "stl": "latest-build/needle-gasket.stl",
+      "stamp": null
+    },
+    {
       "scad": "v2-clam-shell/needle-seal.scad",
       "stl": "latest-build/needle-seal.stl",
       "stamp": null

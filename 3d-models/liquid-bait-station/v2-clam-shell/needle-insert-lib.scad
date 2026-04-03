@@ -1,8 +1,40 @@
 // Needle insert library — include this (not `use`) so common.scad loads.
 // F5 preview / STL: open needle-insert.scad or needle-insert-export.scad.
-// Base disk OD = inner_bait_barrier_id (center tray hole); disk height = station floor.
+// Base OD = inner_bait_barrier_id − clearance; disk height = station_floor; OD groove via rotate_extrude.
 
 include <common.scad>
+
+// Side-facing circumferential groove (rectangular profile in r–z).
+module needle_insert_gasket_groove_cutout() {
+    zc = needle_gasket_groove_z_center;
+    zw = needle_gasket_groove_width_z_mm;
+    R = needle_insert_disk_od / 2;
+    d = needle_gasket_groove_depth_mm;
+    b = needle_gasket_groove_od_bleed_mm;
+    render_if_needed()
+        rotate_extrude(angle = 360, convexity = 4)
+            polygon([
+                [R - d, zc - zw / 2],
+                [R + b, zc - zw / 2],
+                [R + b, zc + zw / 2],
+                [R - d, zc + zw / 2],
+            ]);
+}
+
+// TPU torus: relaxed inner R < groove floor, outer R > base R. Centered on z=0; mate with translate(…, needle_gasket_assembly_z).
+module needle_gasket_ring() {
+    ri = needle_gasket_relaxed_inner_r;
+    ro = needle_gasket_relaxed_outer_r;
+    hz = needle_gasket_relaxed_z_half;
+    render_if_needed()
+        rotate_extrude(angle = 360, convexity = 4)
+            polygon([
+                [ri, -hz],
+                [ro, -hz],
+                [ro, hz],
+                [ri, hz],
+            ]);
+}
 
 module needle_insert_channels() {
     translate([0, 0, -0.5])
@@ -26,10 +58,11 @@ module needle_insert() {
                 }
             }
             needle_insert_channels();
+            needle_insert_gasket_groove_cutout();
         }
 }
 
-// Pocket: coaxial cylinder for base + pin bore; inner barrier hole ID = needle_insert_disk_od.
+// Pocket: coaxial cylinder for base + pin bore (hole ID > insert OD by clearance).
 module needle_insert_pocket() {
     c = needle_insert_pocket_clearance;
     dh = needle_insert_disk_h;

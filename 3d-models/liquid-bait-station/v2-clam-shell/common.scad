@@ -45,7 +45,7 @@ valve_flange_h  = 2;                        // flange height (mm) — prevents p
 valve_retainer_od = valve_disk_od + 1;       // top retention disk OD — just past bore edge
 valve_retainer_id = valve_disk_od - 4;       // top retention disk ID — 2mm lip inward
 valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
-// Needle insert disk OD: set after inner_bait_barrier_id (flush with inner barrier hole ID).
+// Needle insert disk OD: slightly under inner barrier center hole ID for radial clearance.
 slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
@@ -53,7 +53,7 @@ slit_length   = 10;   // each arm of the X-slit (mm)
 station_od     = 85 - unit_od_reduction;   // mm — was 85 at reduction 0; keeps rim margin vs reservoir_od
 station_floor  = 3;    // bottom plate thickness (mm)
 // Needle insert disk height = floor thickness (must not reference station_floor before this line).
-needle_insert_disk_h  = station_floor;
+needle_insert_disk_h  = station_floor;   // needle base height (mm); 3 mm with default station_floor
 needle_insert_pocket_clearance = 0.25;       // radial/press fit vs station pocket
 needle_insert_pocket_z_extra   = 0.1;        // extend pocket subtractor in +Z (boolean margin)
 station_id     = reservoir_od + clearance * 2;  // bore for reservoir
@@ -78,10 +78,11 @@ inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
 inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
-needle_insert_disk_od       = inner_bait_barrier_id;   // base OD = center hole ID (inner barrier)
-// Annulus in floor slab under center hole: OD = hole ID, 2 mm wide toward center, 1 mm tall; notches between guide rails in lip.
+needle_insert_disk_od_clearance_dia = 0.2;   // base OD = center hole ID − this (diametric mm)
+needle_insert_disk_od       = inner_bait_barrier_id - needle_insert_disk_od_clearance_dia;
+// Annulus in floor slab under center hole: OD = hole ID, 1 mm wide toward center, 1 mm tall; notches between guide rails in lip.
 center_hole_floor_ring_h_mm           = 1;
-center_hole_floor_ring_inward_mm      = 2;
+center_hole_floor_ring_inward_mm      = 1;
 center_hole_floor_ring_below_floor_mm = 1;   // z = station_floor − this to z = station_floor
 
 // Guard holes: through outer shell into tray, inset from bore ID
@@ -98,7 +99,8 @@ pin_channel_dia = 3;   // internal fluid channel diameter (mm)
 // aggressive enough for foil yet printable; tiny land at apex (pin_tip_od > channel) avoids a zero-thickness point.
 pin_tip_taper_h = 3;   // mm — length of outer taper from full pin_dia
 pin_tip_od      = pin_channel_dia + 0.6;   // mm at apex (~0.3 mm wall each side for FDM)
-pin_tunnel_z     = station_floor + 2;   // Z center of lateral bore (in pin shank above floor disk)
+// Lateral bore: top tangent flush with bottom of needle seal flange (assembled: valve_z = reservoir_seat − valve_flange_h).
+pin_tunnel_z     = reservoir_seat - valve_flange_h - pin_channel_dia / 2;
 // Lateral bore: start past far side of pin OD so it reads as a full through-hole; end inside barrier ID
 pin_tunnel_face_inset  = 0.25;   // mm past outer pin surface (clean boolean)
 pin_tunnel_barrier_inset = 1;    // mm inside bait barrier inner radius
@@ -106,6 +108,21 @@ pin_tunnel_x_start   = -pin_dia / 2 - pin_tunnel_face_inset;
 pin_tunnel_x_end     = bait_barrier_id / 2 - pin_tunnel_barrier_inset;
 pin_tunnel_reach     = pin_tunnel_x_end - pin_tunnel_x_start;
 pin_tunnel_x_center  = (pin_tunnel_x_start + pin_tunnel_x_end) / 2;  // axis through pin center (symmetric both sides)
+
+// ── Needle base TPU gasket (90A) — circumferential groove on base OD, toroidal ring ──
+// Groove: 2 mm tall on the side; radial depth ≤ ~1 mm (TPU stretch around circumference). Lands above/below on OD.
+needle_gasket_groove_depth_mm       = 1;      // inward from nominal OD toward axis (mm); lower if install is too tight
+needle_gasket_groove_width_z_mm     = 2;      // groove height along Z on OD (mm)
+needle_gasket_groove_z_center       = needle_insert_disk_h / 2;
+needle_gasket_groove_od_bleed_mm  = 0.04;   // subtractor past OD for clean boolean
+needle_gasket_radial_inner_undersize_mm = 0.12;  // relaxed gasket inner R < groove floor R (mm)
+needle_gasket_radial_outer_oversize_mm  = 0.28; // relaxed gasket outer R > base R (mm)
+needle_gasket_groove_axial_clear    = 0.06;   // gasket z half-width slack vs groove (mm, each end)
+needle_gasket_groove_floor_r = needle_insert_disk_od / 2 - needle_gasket_groove_depth_mm;
+needle_gasket_relaxed_inner_r = needle_gasket_groove_floor_r - needle_gasket_radial_inner_undersize_mm;
+needle_gasket_relaxed_outer_r = needle_insert_disk_od / 2 + needle_gasket_radial_outer_oversize_mm;
+needle_gasket_relaxed_z_half = needle_gasket_groove_width_z_mm / 2 - needle_gasket_groove_axial_clear;
+needle_gasket_assembly_z = needle_gasket_groove_z_center;
 
 // Inner barrier — radial ports (same dia as needle / pin channel), flush with tray floor top
 inner_bait_barrier_hole_count   = 6;

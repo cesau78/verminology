@@ -131,7 +131,7 @@ module station_center_hole_lip_guide_notches() {
                 cube([dr, w, dz], center = true);
 }
 
-// Annulus in floor: OD = inner barrier hole ID, inward 2 mm, 1 mm tall; one notch between rails per site on hole side.
+// Annulus in floor: OD = inner barrier hole ID, inward 1 mm, 1 mm tall; one notch between rails per site on hole side.
 module station_center_hole_floor_ring() {
     h = center_hole_floor_ring_h_mm;
     rin = center_hole_floor_ring_inward_mm;

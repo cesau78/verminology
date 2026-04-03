@@ -11,6 +11,7 @@ use <needle-seal.scad>
 exploded   = false;  // spread parts vertically for inspection
 explode_gap = 25;    // mm gap in exploded view
 show_valve  = true;   // show the TPU slit valve disk
+show_needle_gasket = true;   // TPU torus in OD groove (assembly preview)
 show_batting = true;  // show bait ring in tray (assembly preview only)
 locked     = true;   // true = locked (pin engaged), false = unlocked (resting)
 
@@ -40,6 +41,11 @@ crosssection(station_od * 2) {
         bait_station();
     color("DimGray", 0.95)
         needle_insert();
+
+    if (show_needle_gasket)
+        color("MediumSeaGreen", 0.85)
+            translate([0, 0, needle_gasket_assembly_z])
+                needle_gasket_ring();
 
     // Bait ring on tray floor (visualization)
     if (show_batting)
