@@ -27,7 +27,9 @@ reservoir_bottom_deboss_depth =
 // e.g. 0.2 + 3×0.16 = 0.68 mm
 
 // ── Reservoir ─────────────────────────────────────────────────────
-reservoir_od       = 77;                          // outer diameter (mm) — 3×3 on 256mm plate
+// Base ODs below; `unit_od_reduction` shrinks reservoir + station together (skirt stays flush).
+unit_od_reduction  = 13;   // mm off former 77 / 85 mm footprint (~½″ dia); set 0 for full-size
+reservoir_od       = 77 - unit_od_reduction;      // mm — was 77 at reduction 0
 reservoir_height   = 30;                          // total height (mm)
 reservoir_id       = reservoir_od - wall * 2;     // 73mm internal diameter
 reservoir_top_wall = 3;   // ceiling thickness (mm) — thicker than shell wall for puncture resistance
@@ -47,9 +49,9 @@ slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
 // ── Station ───────────────────────────────────────────────────────
-station_od     = 85;   // outer diameter (mm) — 3×3 on 256mm plate (3×85=255)
+station_od     = 85 - unit_od_reduction;   // mm — was 85 at reduction 0; keeps rim margin vs reservoir_od
 station_floor  = 3;    // bottom plate thickness (mm)
-station_id     = reservoir_od + clearance * 2;  // 77.4mm bore for reservoir
+station_id     = reservoir_od + clearance * 2;  // bore for reservoir
 
 // Vertical gap: top of station floor slab (tray) to bottom of seated reservoir
 tray_gap_below_reservoir = 6;   // mm (~0.236 in)
@@ -137,7 +139,7 @@ ant_tunnel_length = reservoir_id / 2 - ant_tunnel_start; // radial span: retaine
 // ── Reservoir Skirt (flush outer shell when assembled) ───────────
 // Extends the reservoir OD to match station OD above the station rim.
 // In reservoir-local coords, starts where the station wall ends.
-skirt_od       = station_od;                                    // 85mm — flush with station
+skirt_od       = station_od;                                    // flush with station OD
 skirt_id       = reservoir_id;                                  // 73mm — overlaps into reservoir wall to avoid gaps
 skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
