@@ -45,17 +45,21 @@ valve_flange_h  = 2;                        // flange height (mm) — prevents p
 valve_retainer_od = valve_disk_od + 1;       // top retention disk OD — just past bore edge
 valve_retainer_id = valve_disk_od - 4;       // top retention disk ID — 2mm lip inward
 valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
-// Needle insert disk OD: slightly under inner barrier center hole ID for radial clearance.
+// Needle insert base: bottom ring at inner barrier hole ID; upper step OD = bottom OD − 2 mm (diametric).
 slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85 - unit_od_reduction;   // mm — was 85 at reduction 0; keeps rim margin vs reservoir_od
 station_floor  = 3;    // bottom plate thickness (mm)
-// Needle insert disk height = floor thickness (must not reference station_floor before this line).
-needle_insert_disk_h  = station_floor;   // needle base height (mm); 3 mm with default station_floor
+// Needle base: bottom segment = central hole ID; upper segment = gasket land OD (must sum to station_floor).
+needle_insert_base_bottom_h      = 1;   // mm — coaxial with inner barrier center hole ID
+needle_insert_base_gasket_step_h = 2;   // mm — upper base step (smaller OD); TPU ring sits here
+needle_insert_disk_h = needle_insert_base_bottom_h + needle_insert_base_gasket_step_h;
+assert(needle_insert_disk_h == station_floor, "needle base segment heights must sum to station_floor");
 needle_insert_pocket_clearance = 0.25;       // radial/press fit vs station pocket
 needle_insert_pocket_z_extra   = 0.1;        // extend pocket subtractor in +Z (boolean margin)
+needle_insert_retention_clips_enabled = false; // true: union clips + widen pocket for barbs
 station_id     = reservoir_od + clearance * 2;  // bore for reservoir
 
 // Vertical gap: top of station floor slab (tray) to bottom of seated reservoir
@@ -78,8 +82,12 @@ inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
 inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
-needle_insert_disk_od_clearance_dia = 0.2;   // base OD = center hole ID − this (diametric mm)
-needle_insert_disk_od       = inner_bait_barrier_id - needle_insert_disk_od_clearance_dia;
+needle_insert_disk_od_clearance_dia = 0.2;   // reference for TPU relaxed outer R vs hole ID (diametric mm)
+needle_insert_base_bottom_od = inner_bait_barrier_id;   // bottom 1 mm — matches station central hole ID
+needle_insert_top_vs_bottom_od_delta_dia = 2;   // upper step OD = bottom OD − this (mm, diameter)
+needle_insert_gasket_land_od = needle_insert_base_bottom_od - needle_insert_top_vs_bottom_od_delta_dia;
+// Legacy name: upper-step OD (gasket land); used by TPU ring math and older includes.
+needle_insert_disk_od        = needle_insert_gasket_land_od;
 
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;
@@ -110,20 +118,21 @@ pin_tunnel_x_center      = (pin_tunnel_x_start + pin_tunnel_x_end) / 2;
 // Axial channel: lowest z = bottom tangent of lateral (no bore below that through insert bed).
 pin_channel_z_bottom     = pin_tunnel_z - pin_channel_dia / 2;
 
-// ── Needle base TPU gasket (90A) — circumferential groove on base OD, toroidal ring ──
-// Groove: 2 mm tall on the side; radial depth ≤ ~1 mm (TPU stretch around circumference). Lands above/below on OD.
-needle_gasket_groove_depth_mm       = 1;      // inward from nominal OD toward axis (mm); lower if install is too tight
-needle_gasket_groove_width_z_mm     = 2;      // groove height along Z on OD (mm)
-needle_gasket_groove_z_center       = needle_insert_disk_h / 2;
-needle_gasket_groove_od_bleed_mm  = 0.04;   // subtractor past OD for clean boolean
-needle_gasket_radial_inner_undersize_mm = 0.12;  // relaxed gasket inner R < groove floor R (mm)
-needle_gasket_radial_outer_oversize_mm  = 0.28; // relaxed gasket outer R > base R (mm)
-needle_gasket_groove_axial_clear    = 0.06;   // gasket z half-width slack vs groove (mm, each end)
-needle_gasket_groove_floor_r = needle_insert_disk_od / 2 - needle_gasket_groove_depth_mm;
-needle_gasket_relaxed_inner_r = needle_gasket_groove_floor_r - needle_gasket_radial_inner_undersize_mm;
-needle_gasket_relaxed_outer_r = needle_insert_disk_od / 2 + needle_gasket_radial_outer_oversize_mm;
-needle_gasket_relaxed_z_half = needle_gasket_groove_width_z_mm / 2 - needle_gasket_groove_axial_clear;
-needle_gasket_assembly_z = needle_gasket_groove_z_center;
+// ── Needle base TPU ring (90A) — no groove on insert; torus stretches over upper step OD ──
+needle_gasket_radial_inner_undersize_mm = 0.12;  // baseline: relaxed inner R < upper step R (mm)
+needle_gasket_radial_outer_oversize_mm  = 0.28; // used only to define held OD below (mm)
+needle_gasket_axial_clear_mm            = 0.06; // torus z half-height slack vs upper step (mm, each end)
+// Relaxed inner opening ID reduced by this (diametric mm) vs land_R − undersize → radial wall thicker by ~half this.
+needle_gasket_ring_inner_id_reduction_dia_mm = 0.5;   // diametric shrink of relaxed inner vs land − undersize
+// Relaxed outer R: reference hole ID − small offset + oversize (independent of upper-step OD).
+needle_gasket_relaxed_outer_r =
+    (needle_insert_base_bottom_od - needle_insert_disk_od_clearance_dia) / 2 + needle_gasket_radial_outer_oversize_mm;
+needle_gasket_relaxed_inner_r =
+    needle_insert_gasket_land_od / 2
+    - needle_gasket_radial_inner_undersize_mm
+    - needle_gasket_ring_inner_id_reduction_dia_mm / 2;
+needle_gasket_relaxed_z_half = needle_insert_base_gasket_step_h / 2 - needle_gasket_axial_clear_mm;
+needle_gasket_assembly_z = needle_insert_base_bottom_h + needle_insert_base_gasket_step_h / 2;
 
 // Inner barrier — radial ports (same dia as needle / pin channel), flush with tray floor top
 inner_bait_barrier_hole_count   = 6;
@@ -141,6 +150,25 @@ inner_barrier_rail_fill_inward_mm = 1; // filler depth toward center (mm)
 inner_barrier_rail_height_trim_mm = 3; // shorten rails + filler from top (mm); clears inner wall top lip
 inner_barrier_rail_extend_below_floor_mm = 1; // grow downward from tray floor toward needle pocket (mm)
 inner_barrier_rail_z_offset_mm  = 1;   // shift whole rail + filler stack +Z (mm)
+inner_barrier_rail_z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm + inner_barrier_rail_z_offset_mm;
+inner_barrier_rail_z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm + inner_barrier_rail_z_offset_mm;
+
+// Needle insert retention clips — 6×, same phase as inner barrier rails; outward barb hooks rail top ledge.
+// Insertion: align each clip with the vertical slot between the two rails at that site (6-fold symmetry).
+// Stem outer face stays flush with disk OD; only the barb protrudes — must flex inward (~PETG) to pass the hole + rails.
+needle_insert_clip_count = inner_bait_barrier_hole_count;
+needle_insert_clip_phase_deg = inner_barrier_rail_phase_deg;
+needle_insert_clip_z0 = 0.35;
+needle_insert_clip_anchor_depth_mm = 0.4;    // root into disk, inside nominal OD
+needle_insert_clip_stem_radial_mm    = 0.7;   // flex leg: inner extent from OD toward axis (mm)
+needle_insert_clip_tangent_width_mm  = 2.1;   // fits between paired rails at each site
+needle_insert_clip_barb_radial_mm    = 0.18;  // small outward hook; keep ≤ ring gap + pocket c for snap
+needle_insert_clip_barb_axial_mm     = 0.85;
+needle_insert_clip_shelf_clear_below_rail_top_mm = 0.4;
+needle_insert_clip_overhang_past_rail_top_mm     = 0.22;
+needle_insert_clip_body_z_top = inner_barrier_rail_z_top - needle_insert_clip_shelf_clear_below_rail_top_mm;
+needle_insert_clip_barb_z_top = inner_barrier_rail_z_top + needle_insert_clip_overhang_past_rail_top_mm;
+needle_insert_clip_pocket_radial_extra_mm = 0.35;  // beyond disk OD + needle_insert_pocket_clearance for barb + flex
 
 // Computed pin height (from station z=0) — apex flush with top of needle seal disk (not retention barb)
 // Needle insert: base OD = inner barrier center hole ID; coaxial pocket; pin apex at pin_top.

@@ -1,27 +1,10 @@
 // Needle insert library — include this (not `use`) so common.scad loads.
 // F5 preview / STL: open needle-insert.scad or needle-insert-export.scad.
-// Base OD = inner_bait_barrier_id − clearance; disk height = station_floor; OD groove via rotate_extrude.
+// Base: union of two cylinders — bottom 1 mm @ inner_bait_barrier_id, upper 2 mm @ bottom OD − 2 mm (diametric).
 
 include <common.scad>
 
-// Side-facing circumferential groove (rectangular profile in r–z).
-module needle_insert_gasket_groove_cutout() {
-    zc = needle_gasket_groove_z_center;
-    zw = needle_gasket_groove_width_z_mm;
-    R = needle_insert_disk_od / 2;
-    d = needle_gasket_groove_depth_mm;
-    b = needle_gasket_groove_od_bleed_mm;
-    render_if_needed()
-        rotate_extrude(angle = 360, convexity = 4)
-            polygon([
-                [R - d, zc - zw / 2],
-                [R + b, zc - zw / 2],
-                [R + b, zc + zw / 2],
-                [R - d, zc + zw / 2],
-            ]);
-}
-
-// TPU torus: relaxed inner R < groove floor, outer R > base R. Centered on z=0; mate with translate(…, needle_gasket_assembly_z).
+// TPU torus: relaxed inner R < upper step R, outer R > upper step R. Centered on z=0; mate with translate(…, needle_gasket_assembly_z).
 module needle_gasket_ring() {
     ri = needle_gasket_relaxed_inner_r;
     ro = needle_gasket_relaxed_outer_r;
@@ -36,6 +19,40 @@ module needle_gasket_ring() {
             ]);
 }
 
+// Six flexible tabs: stem outer face flush with disk OD (R); only barb extends past R — enables insert + flex past bore.
+module needle_insert_retention_clips() {
+    R = needle_insert_base_bottom_od / 2;
+    w = needle_insert_clip_tangent_width_mm;
+    ad = needle_insert_clip_anchor_depth_mm;
+    stem = needle_insert_clip_stem_radial_mm;
+    br = needle_insert_clip_barb_radial_mm;
+    bz = needle_insert_clip_barb_axial_mm;
+    z0 = needle_insert_clip_z0;
+    z_body_top = needle_insert_clip_body_z_top;
+    z_barb_top = needle_insert_clip_barb_z_top;
+    z_barb_bot = z_body_top - bz;
+    for (i = [0 : needle_insert_clip_count - 1])
+        rotate([0, 0, needle_insert_clip_phase_deg + i * (360 / needle_insert_clip_count)])
+            render_if_needed()
+                union() {
+                    translate([R - ad - stem, -w / 2, z0])
+                        cube([ad + stem, w, z_body_top - z0]);
+                    translate([R, -w / 2, z_barb_bot])
+                        cube([br, w, z_barb_top - z_barb_bot]);
+                }
+}
+
+// Lower base step — plain cylinder only (no groove, no difference).
+module needle_insert_base_bottom_cylinder() {
+    cylinder(h = needle_insert_base_bottom_h, d = needle_insert_base_bottom_od);
+}
+
+// Upper base step — second cylinder only (stacked on bottom).
+module needle_insert_base_upper_cylinder() {
+    translate([0, 0, needle_insert_base_bottom_h])
+        cylinder(h = needle_insert_base_gasket_step_h, d = needle_insert_gasket_land_od);
+}
+
 module needle_insert_channels() {
     // Vertical: from bottom of lateral port up (not through z=0 below lateral).
     vb = max(0, pin_channel_z_bottom);
@@ -47,34 +64,37 @@ module needle_insert_channels() {
             cylinder(h = pin_tunnel_reach, d = pin_channel_dia, center = true);
 }
 
-// Solid: base disk + hollow pin through pin_top (no bayonet tabs).
+// Solid: union(two base cylinders, pin…); channels subtract through the stack.
 module needle_insert() {
     sh = pin_top - pin_tip_taper_h - needle_insert_disk_h;
     render_if_needed()
         difference() {
             union() {
-                cylinder(h = needle_insert_disk_h, d = needle_insert_disk_od);
+                needle_insert_base_bottom_cylinder();
+                needle_insert_base_upper_cylinder();
                 translate([0, 0, needle_insert_disk_h]) {
                     cylinder(h = sh, d = pin_dia);
                     translate([0, 0, sh])
                         cylinder(h = pin_tip_taper_h, d1 = pin_dia, d2 = pin_tip_od);
                 }
+                if (needle_insert_retention_clips_enabled)
+                    needle_insert_retention_clips();
             }
             needle_insert_channels();
-            needle_insert_gasket_groove_cutout();
         }
 }
 
-// Pocket: coaxial cylinder for base + pin bore (hole ID > insert OD by clearance).
+// Pocket: disk OD + clearance; extra radial margin only when retention clips enabled.
 module needle_insert_pocket() {
     c = needle_insert_pocket_clearance;
-    dh = needle_insert_disk_h;
     ze = needle_insert_pocket_z_extra;
-    r_disk = needle_insert_disk_od / 2 + c;
+    r_extra = needle_insert_retention_clips_enabled ? needle_insert_clip_pocket_radial_extra_mm : 0;
+    r_clip = needle_insert_base_bottom_od / 2 + c + r_extra;
+    z_clip_top = inner_barrier_rail_z_top + 0.08;
     translate([0, 0, -0.02])
         union() {
-            cylinder(h = dh + 0.02 + ze, r = r_disk);
-            translate([0, 0, dh])
-                cylinder(h = pin_top - dh + 0.5 + ze, d = pin_dia + 2 * c);
+            cylinder(h = z_clip_top + 0.02 + ze, r = r_clip);
+            translate([0, 0, z_clip_top])
+                cylinder(h = pin_top - z_clip_top + 0.5 + ze, d = pin_dia + 2 * c);
         }
 }
