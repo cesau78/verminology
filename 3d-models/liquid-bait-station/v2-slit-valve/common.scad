@@ -8,7 +8,7 @@ crosssection_view = false;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 10;     // position (mm) along the chosen axis
 
-$fn = preview ? 32 : 256;
+$fn = preview ? 32 : 64;
 
 // ── General ───────────────────────────────────────────────────────
 wall      = 2;     // shell wall thickness (mm)
@@ -123,11 +123,28 @@ station_scallop_z   = scallop_center_z;                      // station starts a
 reservoir_scallop_z = scallop_center_z - reservoir_seat;      // reservoir-local coords
 scallop_offset      = 360 / guard_hole_count / 2;            // half-step from ant holes
 
+// ── Edge Fillet ──────────────────────────────────────────────────
+fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
+
 // ── Utility Modules ───────────────────────────────────────────────
 
 module render_if_needed() {
     if (!preview) render() children();
     else children();
+}
+
+// Subtractive ring that rounds an outer cylinder edge.
+// Place at z=0 for a bottom edge; mirror([0,0,1]) or translate
+// to the top face for a top edge.
+module edge_round(od, r) {
+    render_if_needed()
+        rotate_extrude()
+            translate([od / 2 - r, 0])
+                difference() {
+                    square(r + 0.1);
+                    translate([0, r])
+                        circle(r = r);
+                }
 }
 
 module crosssection(extent) {

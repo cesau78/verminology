@@ -24,6 +24,7 @@ module bait_station() {
             station_torus_hump();
         }
         station_side_scallops();
+        station_bottom_fillet();
     }
 }
 
@@ -197,6 +198,12 @@ module station_side_scallops() {
             translate([station_od / 2, 0, station_scallop_z])
                 scale([scallop_depth, scallop_width / 2, scallop_height / 2])
                     sphere(r = 1);
+}
+
+// ── Bottom Edge Fillet ────────────────────────────────────────────
+// 2mm quarter-round on the bottom outer edge.
+module station_bottom_fillet() {
+    edge_round(station_od, fillet_r);
 }
 
 // ── Render ────────────────────────────────────────────────────────

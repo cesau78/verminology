@@ -25,6 +25,7 @@ module reservoir() {
             reservoir_ant_tunnels();
         }
         reservoir_side_scallops();
+        reservoir_top_fillet();
     }
 }
 
@@ -145,6 +146,14 @@ module reservoir_side_scallops() {
             translate([skirt_od / 2, 0, reservoir_scallop_z])
                 scale([scallop_depth, scallop_width / 2, scallop_height / 2])
                     sphere(r = 1);
+}
+
+// ── Top Edge Fillet ──────────────────────────────────────────────
+// 2mm quarter-round on the top outer edge.
+module reservoir_top_fillet() {
+    translate([0, 0, reservoir_height])
+        mirror([0, 0, 1])
+            edge_round(skirt_od, fillet_r);
 }
 
 // ── Render ────────────────────────────────────────────────────────
