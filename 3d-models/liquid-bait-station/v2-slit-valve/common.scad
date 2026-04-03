@@ -33,6 +33,9 @@ valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
 slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
 slit_length   = 10;   // each arm of the X-slit (mm)
 
+// ── Needle Seal (slit-free variant — TPU interference fit around pin) ─
+seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
+
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85;   // outer diameter (mm) — 3×3 on 256mm plate (3×85=255)
 station_floor  = 5;    // floor thickness — deep enough for torus groove

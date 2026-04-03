@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"/c/Program Files/OpenSCAD/openscad.com\" -o /dev/null \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/station.scad\")"
+      "Bash(\"/c/Program Files/OpenSCAD/openscad.com\" -o /dev/null \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/station.scad\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(where openscad:*)",
+      "Read(//c/Program Files \\(x86\\)/OpenSCAD/**)",
+      "Bash(ls c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/*.stl)",
+      "Bash(\"/c/Program Files/OpenSCAD/openscad.exe\" -o \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/station.stl\" \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/station.scad\")",
+      "Bash(\"/c/Program Files/OpenSCAD/openscad.exe\" -o \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/reservoir.stl\" \"c:/Users/chuck/source/verminology/3d-models/liquid-bait-station/v2-slit-valve/reservoir.scad\")"
     ]
   }
 }
