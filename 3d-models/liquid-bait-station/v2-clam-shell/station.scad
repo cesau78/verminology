@@ -1,28 +1,34 @@
 // V2 Bait Station — Open tray with push-pin, flat floor, ant access holes.
 // The reservoir drops inside; tabs slide into vertical slots and seat onto the pin.
 // Ants access bait through small holes in the outer wall into the tray cavity.
-// Outer + inner bait barrier rings; inner ring has pin channel cutouts for the lateral bore.
+// Outer + inner bait barrier rings; inner ring has holes and vertical rails + filler between them.
 
-include <common.scad>
+include <needle-insert-lib.scad>
 
 // ── Main Assembly ─────────────────────────────────────────────────
 module bait_station() {
-    difference() {
-        union() {
-            difference() {
-                station_solid();
-                station_bore();
-                station_tab_slots();
-                station_clip_grooves();
-                station_guard_holes();
+    union() {
+        difference() {
+            union() {
+                difference() {
+                    station_solid();
+                    station_bore();
+                    station_tab_slots();
+                    station_clip_grooves();
+                    station_guard_holes();
+                }
+                // Barriers after bore; needle is a separate printed insert (pocket subtracted below)
+                station_bait_barrier_ring();
+                station_inner_bait_barrier_ring();
             }
-            // Pin and barrier ring added after bore so the hollow doesn't remove them
-            station_push_pin();
-            station_bait_barrier_ring();
-            station_inner_bait_barrier_ring();
+            needle_insert_pocket();
+            station_side_scallops();
+            part_bottom_info_stamp_deboss(station_stamp_bottom, station_od);
         }
-        station_side_scallops();
-        part_bottom_info_stamp_deboss(station_stamp_bottom, station_od);
+        // Rails + floor ring extend into needle pocket region; union after pocket so they are not subtracted.
+        station_inner_barrier_rails();
+        color("red")
+            station_center_hole_floor_ring();
     }
 }
 
@@ -39,30 +45,6 @@ module station_bore() {
     render_if_needed()
         translate([0, 0, station_floor])
             cylinder(h = station_height - station_floor + 1, d = station_id);
-}
-
-// ── Push Pin / Straw ─────────────────────────────────────────────
-// Central hollow straw; top is a foil-piercing frustum (outer taper, straight bore).
-module station_push_pin() {
-    render_if_needed() difference() {
-        union() {
-            cylinder(h = pin_shank_h, d = pin_dia);
-            translate([0, 0, pin_shank_h])
-                cylinder(h = pin_tip_taper_h, d1 = pin_dia, d2 = pin_tip_od);
-        }
-        station_push_pin_channels();
-    }
-}
-
-// Internal fluid channels — subtracted from the pin
-module station_push_pin_channels() {
-    // Vertical bore down center — open at top (straw)
-    translate([0, 0, -0.5])
-        cylinder(h = pin_top + 1, d = pin_channel_dia);
-    // One lateral bore: centered on pin axis so it exits both sides (rotate then offset breaks coplanarity)
-    translate([pin_tunnel_x_center, 0, pin_tunnel_z])
-        rotate([0, 90, 0])
-            cylinder(h = pin_tunnel_reach, d = pin_channel_dia, center = true);
 }
 
 // ── Bait Barrier Ring (outer) ────────────────────────────────────
@@ -88,7 +70,7 @@ module station_inner_bait_barrier_ring() {
                     translate([0, 0, -0.01])
                         cylinder(h = bait_barrier_h + 0.02, d = inner_bait_barrier_id);
                 }
-            station_push_pin_channels();
+            needle_insert_channels();
             station_inner_barrier_wall_holes();
         }
 }
@@ -100,6 +82,72 @@ module station_inner_barrier_wall_holes() {
             translate([inner_bait_barrier_hole_start_r, 0, inner_bait_barrier_hole_z])
                 rotate([0, 90, 0])
                     cylinder(h = inner_bait_barrier_hole_length, d = inner_bait_barrier_hole_dia);
+}
+
+// Two 1 mm-wide rails per site (tangential ±Y), 2 mm inward from inner barrier ID.
+// Filler between rails: same vertical span. Top fixed below barrier top; bottom extends to needle-insert lip.
+module station_inner_barrier_rails() {
+    w = inner_barrier_rail_width_mm;
+    rin = inner_barrier_rail_inward_mm;
+    yo = inner_barrier_rail_y_offset_mm;
+    id2 = inner_bait_barrier_id / 2;
+    z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm;
+    z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm;
+    zh = z_top - z_bot;
+    zc = z_bot + zh / 2;
+    // +X local = outward; rail occupies x in [id2 - rin, id2], centered at id2 - rin/2
+    xc = id2 - rin / 2;
+    for (i = [0 : inner_bait_barrier_hole_count - 1])
+        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)]) {
+            for (sgn = [-1, 1])
+                translate([xc, sgn * yo, zc])
+                    cube([rin, w, zh], center = true);
+            nw = inner_barrier_rail_fill_width_mm;
+            rf = inner_barrier_rail_fill_inward_mm;
+            translate([id2 - rf / 2, 0, zc])
+                cube([rf, nw, zh], center = true);
+        }
+}
+
+// One notch per site between rails: hole-side only — 1 mm into ring solid; box reaches inward past ri for clean arc cut.
+module station_center_hole_lip_guide_notches() {
+    h = center_hole_floor_ring_h_mm;
+    rin = center_hole_floor_ring_inward_mm;
+    zb = station_floor - center_hole_floor_ring_below_floor_mm;
+    ro = inner_bait_barrier_id / 2;
+    ri = ro - rin;
+    lip_in = center_hole_lip_notch_into_lip_mm;
+    d_void = center_hole_lip_notch_into_void_mm;
+    ov = center_hole_lip_notch_inner_overlap_mm;
+    // Local +X outward: inner face of box at ri - d_void - ov (only ri..ri+lip_in overlaps ring solid).
+    dr = lip_in + d_void + ov;
+    xc = ri + (lip_in - d_void - ov) / 2;
+    dz = h + center_hole_lip_notch_z_overshoot_mm;
+    w = inner_barrier_rail_fill_width_mm + center_hole_lip_notch_tangent_extra_mm;
+    zc = zb + h / 2;
+    for (i = [0 : inner_bait_barrier_hole_count - 1])
+        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)])
+            translate([xc, 0, zc])
+                cube([dr, w, dz], center = true);
+}
+
+// Annulus in floor: OD = inner barrier hole ID, inward 2 mm, 1 mm tall; one notch between rails per site on hole side.
+module station_center_hole_floor_ring() {
+    h = center_hole_floor_ring_h_mm;
+    rin = center_hole_floor_ring_inward_mm;
+    zb = station_floor - center_hole_floor_ring_below_floor_mm;
+    ro = inner_bait_barrier_id / 2;
+    ri = ro - rin;
+    render_if_needed()
+        difference() {
+            translate([0, 0, zb])
+                difference() {
+                    cylinder(h = h, r = ro);
+                    translate([0, 0, -0.01])
+                        cylinder(h = h + 0.02, r = ri);
+                }
+            station_center_hole_lip_guide_notches();
+        }
 }
 
 // ── Tab Slots ─────────────────────────────────────────────────────

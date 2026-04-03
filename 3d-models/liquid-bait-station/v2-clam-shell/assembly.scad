@@ -2,7 +2,7 @@
 // Toggle 'locked' to see pin engagement vs disengaged.
 // Toggle 'exploded' to spread parts for inspection.
 
-include <common.scad>
+include <needle-insert-lib.scad>
 use <station.scad>
 use <reservoir.scad>
 use <needle-seal.scad>
@@ -35,9 +35,11 @@ valve_z = res_z_final - valve_flange_h - (exploded ? explode_gap / 2 : 0);
 
 // ── Assembly ──────────────────────────────────────────────────────
 crosssection(station_od * 2) {
-    // Station (without pin) — at origin
+    // Station shell (pocket for needle); rigid needle insert at origin
     color("SlateGray", 0.8)
         bait_station();
+    color("DimGray", 0.95)
+        needle_insert();
 
     // Bait ring on tray floor (visualization)
     if (show_batting)

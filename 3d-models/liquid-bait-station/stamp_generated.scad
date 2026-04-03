@@ -5,3 +5,4 @@ info_stamp_line2 = "Liquid Bait Station";
 info_stamp_line3 = "v2.4 Prototype";
 reservoir_stamp_bottom = false;
 station_stamp_bottom = true;
+needle_insert_export_stamp_bottom = false;
