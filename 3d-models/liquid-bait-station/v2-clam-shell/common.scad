@@ -5,7 +5,7 @@
 // ── Performance Settings ──────────────────────────────────────────
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
 mesh_preview = true;
-crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -30,8 +30,9 @@ reservoir_bottom_deboss_depth =
 reservoir_od       = 77;                          // outer diameter (mm) — 3×3 on 256mm plate
 reservoir_height   = 30;                          // total height (mm)
 reservoir_id       = reservoir_od - wall * 2;     // 73mm internal diameter
-reservoir_cavity_h = reservoir_height - wall * 2; // 26mm internal height
-// Volume: π × 36.5² × 26 ≈ 109ml ≈ 3.7oz (slightly less with dome)
+reservoir_top_wall = 3;   // ceiling thickness (mm) — thicker than shell wall for puncture resistance
+reservoir_cavity_h = reservoir_height - wall - reservoir_top_wall;
+// Volume: π × 36.5² × cavity_h (slightly less with dome / features)
 
 // ── TPU Slit Valve ────────────────────────────────────────────────
 valve_disk_od  = 16;                        // disk outer diameter (mm)
@@ -47,33 +48,59 @@ slit_length   = 10;   // each arm of the X-slit (mm)
 
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85;   // outer diameter (mm) — 3×3 on 256mm plate (3×85=255)
-station_floor  = 5;    // floor thickness — deep enough for torus groove
+station_floor  = 3;    // bottom plate thickness (mm)
 station_id     = reservoir_od + clearance * 2;  // 77.4mm bore for reservoir
 
-// ── Torus Groove (full-circle ring channel in tray floor) ─────────
-torus_groove_dia = 6;  // cross-section diameter — semicircle profile in floor
-torus_groove_r   = station_id / 2 - torus_groove_dia / 2;  // 35.7mm center radius
-// Outer edge of groove touches the bore wall for direct ant access.
-torus_hump_r     = torus_groove_r - torus_groove_dia;      // 29.7mm — hump ring just inside groove
-torus_inner_r    = torus_hump_r - torus_groove_dia;        // 23.7mm — inner groove just inside hump
+// Vertical gap: top of station floor slab (tray) to bottom of seated reservoir
+tray_gap_below_reservoir = 6;   // mm (~0.236 in)
+reservoir_seat           = station_floor + tray_gap_below_reservoir;
+station_height   = 18;   // total station height (mm)
 
-// Reservoir sits on top of the hump torus
-reservoir_seat   = station_floor + torus_groove_dia / 2 + clearance;  // 8.2mm — just above hump top
-station_height   = 18;   // total height — raised 3mm for higher reservoir seat
+// ── Bait barrier ring (annulus in tray) ────────────────────────────
+// difference( outer_cyl, inner_cyl ) — wall from tray floor up to reservoir bottom.
+bait_barrier_id_in    = 2;   // inner clear diameter (inches)
+bait_barrier_id       = bait_barrier_id_in * 25.4;   // 50.8 mm
+bait_barrier_radial_t = 1;   // radial wall thickness (mm)
+bait_barrier_od       = bait_barrier_id + 2 * bait_barrier_radial_t;
+bait_barrier_bottom_z = station_floor;   // top of station floor slab
+bait_barrier_top_z    = reservoir_seat;    // flush with bottom of seated reservoir
+bait_barrier_h        = bait_barrier_top_z - bait_barrier_bottom_z;  // = tray_gap_below_reservoir
 
-// ── Push Pin / Straw (station center, spreads valve slits on lock) ─
+// Inner bait barrier — concentric annulus, same height as outer; pin channels cut through (lateral bore crosses wall)
+inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
+inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
+inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
+inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
+
+// Guard holes: through outer shell into tray, inset from bore ID
+guard_hole_inner_r = station_id / 2 - 2;
+
+// ── Push Pin / Straw (station center, spreads slit valve / engages needle seal) ─
 pin_dia         = 6;   // pin outer diameter (mm) — smaller than slit_length for proper spread
-pin_penetration = 3;   // mm past valve top when fully locked — enough to clear valve reliably
 
 // ── Needle Seal (slit-free variant — TPU interference fit around pin) ─
 seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)
-pin_tunnel_count = 3;  // cross-tunnels at base for fluid drainage (120° apart)
+pin_tunnel_z     = station_floor + 1;   // Z center of single lateral bore through pin
+// Lateral bore: start past far side of pin OD so it reads as a full through-hole; end inside barrier ID
+pin_tunnel_face_inset  = 0.25;   // mm past outer pin surface (clean boolean)
+pin_tunnel_barrier_inset = 1;    // mm inside bait barrier inner radius
+pin_tunnel_x_start   = -pin_dia / 2 - pin_tunnel_face_inset;
+pin_tunnel_x_end     = bait_barrier_id / 2 - pin_tunnel_barrier_inset;
+pin_tunnel_reach     = pin_tunnel_x_end - pin_tunnel_x_start;
+pin_tunnel_x_center  = (pin_tunnel_x_start + pin_tunnel_x_end) / 2;  // axis through pin center (symmetric both sides)
 
-// Computed pin height (from station z=0)
-// Straight straw — no cone, open top for fluid flow
-pin_top     = reservoir_seat + valve_disk_h + pin_penetration;  // top of straw
+// Inner barrier — radial ports (same dia as needle / pin channel), flush with tray floor top
+inner_bait_barrier_hole_count   = 6;
+inner_bait_barrier_hole_dia     = pin_channel_dia;
+inner_bait_barrier_hole_z       = station_floor + inner_bait_barrier_hole_dia / 2;  // lower tangent at z = station_floor
+inner_bait_barrier_hole_start_r = inner_bait_barrier_id / 2 - 0.35;   // start just inside inner opening
+inner_bait_barrier_hole_length  = inner_bait_barrier_radial_t + 0.8; // through 1 mm wall with margin
+
+// Computed pin height (from station z=0) — tip flush with top of needle seal disk only (not retention barb)
+// Assembly: valve_z = reservoir_seat − valve_flange_h → disk top = reservoir_seat + valve_disk_h
+pin_top     = reservoir_seat + valve_disk_h;
 
 // ── Tab Slide-Lock ────────────────────────────────────────────────
 // Tabs on reservoir outer wall slide straight down into vertical slots
@@ -89,16 +116,10 @@ tab_z        = 2;    // tab bottom position from reservoir bottom (mm)
 tab_z_locked   = reservoir_seat + tab_z;                // seated
 tab_z_unlocked = reservoir_seat + tab_drop + tab_z;     // elevated, pin clear
 
-// ── Guard Holes (ant access through outer wall at groove level) ───
+// ── Guard Holes (ant access through outer wall into tray) ───────────
 guard_hole_dia   = 3.2;  // hole diameter — ants only
 guard_hole_count = 12;   // number around circumference
-guard_hole_z     = station_floor - torus_groove_dia / 3;  // 3mm — lower groove zone
-
-// ── Drain Channels (radial grooves from pin base to torus groove) ─
-drain_count      = 4;   // channels at 90° intervals
-drain_width      = 3;   // channel width (mm)
-drain_depth      = 2;   // channel depth below floor surface (mm)
-central_pocket_r = pin_dia / 2 + 3;  // 6mm — annular pool around pin base
+guard_hole_z     = station_floor + 1.5;  // just above flat floor, opens into tray cavity
 
 // ── Ant Tunnels (half-cone ramps from wall to valve retainer) ────
 ant_tunnel_count  = guard_hole_count;              // one tunnel per guard hole
