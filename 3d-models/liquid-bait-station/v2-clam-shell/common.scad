@@ -82,6 +82,10 @@ pin_dia         = 6;   // pin outer diameter (mm) — smaller than slit_length f
 seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)
+// Foil-piercing tip: frustum on outer surface only; bore stays straight. ~50–60° included angle is
+// aggressive enough for foil yet printable; tiny land at apex (pin_tip_od > channel) avoids a zero-thickness point.
+pin_tip_taper_h = 3;   // mm — length of outer taper from full pin_dia
+pin_tip_od      = pin_channel_dia + 0.6;   // mm at apex (~0.3 mm wall each side for FDM)
 pin_tunnel_z     = station_floor + 1;   // Z center of single lateral bore through pin
 // Lateral bore: start past far side of pin OD so it reads as a full through-hole; end inside barrier ID
 pin_tunnel_face_inset  = 0.25;   // mm past outer pin surface (clean boolean)
@@ -98,9 +102,10 @@ inner_bait_barrier_hole_z       = station_floor + inner_bait_barrier_hole_dia / 
 inner_bait_barrier_hole_start_r = inner_bait_barrier_id / 2 - 0.35;   // start just inside inner opening
 inner_bait_barrier_hole_length  = inner_bait_barrier_radial_t + 0.8; // through 1 mm wall with margin
 
-// Computed pin height (from station z=0) — tip flush with top of needle seal disk only (not retention barb)
+// Computed pin height (from station z=0) — apex flush with top of needle seal disk (not retention barb)
 // Assembly: valve_z = reservoir_seat − valve_flange_h → disk top = reservoir_seat + valve_disk_h
-pin_top     = reservoir_seat + valve_disk_h;
+pin_top          = reservoir_seat + valve_disk_h;
+pin_shank_h      = pin_top - pin_tip_taper_h;   // cylindrical section below taper
 
 // ── Tab Slide-Lock ────────────────────────────────────────────────
 // Tabs on reservoir outer wall slide straight down into vertical slots

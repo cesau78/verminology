@@ -42,13 +42,14 @@ module station_bore() {
 }
 
 // ── Push Pin / Straw ─────────────────────────────────────────────
-// Central hollow straw that spreads the slit valve open when the
-// reservoir is locked down. Open top allows fluid to flow down
-// through the bore and out one lateral port into the volume inside the barrier ID.
+// Central hollow straw; top is a foil-piercing frustum (outer taper, straight bore).
 module station_push_pin() {
     render_if_needed() difference() {
-        // Straight cylinder — no cone
-        cylinder(h = pin_top, d = pin_dia);
+        union() {
+            cylinder(h = pin_shank_h, d = pin_dia);
+            translate([0, 0, pin_shank_h])
+                cylinder(h = pin_tip_taper_h, d1 = pin_dia, d2 = pin_tip_od);
+        }
         station_push_pin_channels();
     }
 }
