@@ -49,18 +49,16 @@ torus_inner_r    = torus_hump_r - torus_groove_dia;        // 23.7mm — inner g
 reservoir_seat   = station_floor + torus_groove_dia / 2 + clearance;  // 8.2mm — just above hump top
 station_height   = 18;   // total height — raised 3mm for higher reservoir seat
 
-// ── Push Pin (station center, spreads valve slits on lock) ────────
-pin_dia         = 6;   // pin diameter (mm) — smaller than slit_length for proper spread
-pin_cone_h      = 2;   // tapered tip height for smooth slit entry
-pin_blunt_dia   = 2;   // flat cap diameter at cone tip to blunt the point
-pin_penetration = 2;   // mm past valve top when fully locked
+// ── Push Pin / Straw (station center, spreads valve slits on lock) ─
+pin_dia         = 6;   // pin outer diameter (mm) — smaller than slit_length for proper spread
+pin_penetration = 3;   // mm past valve top when fully locked — enough to clear valve reliably
 
-pin_channel_dia = 2;   // internal fluid channel diameter (mm)
+pin_channel_dia = 3;   // internal fluid channel diameter (mm)
+pin_tunnel_count = 3;  // cross-tunnels at base for fluid drainage (120° apart)
 
-// Computed pin heights (from station z=0)
-// Cone starts where the retention flange ends (flange top = reservoir_seat)
-pin_cyl_top = reservoir_seat;                  // 8.2mm — cone begins at flange top
-pin_top     = pin_cyl_top + pin_cone_h;        // 11.2mm — cone tip
+// Computed pin height (from station z=0)
+// Straight straw — no cone, open top for fluid flow
+pin_top     = reservoir_seat + valve_disk_h + pin_penetration;  // top of straw
 
 // ── Bayonet Twist-Lock ────────────────────────────────────────────
 // Lugs on reservoir outer wall; straight vertical entry slots in station bore.
