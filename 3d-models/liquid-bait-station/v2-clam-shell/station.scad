@@ -83,7 +83,8 @@ module station_inner_barrier_wall_holes() {
 }
 
 // Two 1 mm-wide rails per site (tangential ±Y), 2 mm inward from inner barrier ID.
-// Filler between rails: same vertical span. Top fixed below barrier top; bottom extends below tray floor.
+// Filler back plate between rails: radial slab from gasket land OD to barrier ID (upper-step annulus);
+// needle clips sit on the land OD and flex inward — they do not occupy this outer radial gap.
 module station_inner_barrier_rails() {
     w = inner_barrier_rail_width_mm;
     rin = inner_barrier_rail_inward_mm;

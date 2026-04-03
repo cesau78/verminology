@@ -59,7 +59,7 @@ needle_insert_disk_h = needle_insert_base_bottom_h + needle_insert_base_gasket_s
 assert(needle_insert_disk_h == station_floor, "needle base segment heights must sum to station_floor");
 needle_insert_pocket_clearance = 0.25;       // radial/press fit vs station pocket
 needle_insert_pocket_z_extra   = 0.1;        // extend pocket subtractor in +Z (boolean margin)
-needle_insert_retention_clips_enabled = false; // true: union clips + widen pocket for barbs
+needle_insert_retention_clips_enabled = true; // union 6× clips + widen pocket; rail filler stops short of ID for stem clearance
 station_id     = reservoir_od + clearance * 2;  // bore for reservoir
 
 // Vertical gap: top of station floor slab (tray) to bottom of seated reservoir
@@ -153,22 +153,25 @@ inner_barrier_rail_z_offset_mm  = 1;   // shift whole rail + filler stack +Z (mm
 inner_barrier_rail_z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm + inner_barrier_rail_z_offset_mm;
 inner_barrier_rail_z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm + inner_barrier_rail_z_offset_mm;
 
-// Needle insert retention clips — 6×, same phase as inner barrier rails; outward barb hooks rail top ledge.
+// Needle insert retention posts — 6×, same phase as inner barrier rails; flex posts + 2 mm top barb (two ramps at slope_deg).
+// Clips sit on the upper base step (gasket land OD), not the lower 1 mm ring — leaves lower ring for TPU gasket.
 // Insertion: align each clip with the vertical slot between the two rails at that site (6-fold symmetry).
-// Stem outer face stays flush with disk OD; only the barb protrudes — must flex inward (~PETG) to pass the hole + rails.
 needle_insert_clip_count = inner_bait_barrier_hole_count;
 needle_insert_clip_phase_deg = inner_barrier_rail_phase_deg;
-needle_insert_clip_z0 = 0.35;
+needle_insert_clip_z0_above_gasket_step_mm = 0.25;   // local Z above top of first cylinder (start of upper step)
 needle_insert_clip_anchor_depth_mm = 0.4;    // root into disk, inside nominal OD
 needle_insert_clip_stem_radial_mm    = 0.7;   // flex leg: inner extent from OD toward axis (mm)
 needle_insert_clip_tangent_width_mm  = 2.1;   // fits between paired rails at each site
-needle_insert_clip_barb_radial_mm    = 0.18;  // small outward hook; keep ≤ ring gap + pocket c for snap
-needle_insert_clip_barb_axial_mm     = 0.85;
-needle_insert_clip_shelf_clear_below_rail_top_mm = 0.4;
-needle_insert_clip_overhang_past_rail_top_mm     = 0.22;
+needle_insert_clip_shelf_clear_below_rail_top_mm = 0.12;  // post top vs rail top (station Z)
 needle_insert_clip_body_z_top = inner_barrier_rail_z_top - needle_insert_clip_shelf_clear_below_rail_top_mm;
-needle_insert_clip_barb_z_top = inner_barrier_rail_z_top + needle_insert_clip_overhang_past_rail_top_mm;
-needle_insert_clip_pocket_radial_extra_mm = 0.35;  // beyond disk OD + needle_insert_pocket_clearance for barb + flex
+// Top barb: +2 mm above flat post top — two 1 mm legs; outer faces vs horizontal = slope_deg (60° steeper than 45° → smaller apex).
+needle_insert_clip_top_barb_seg_h_mm    = 1;   // vertical per leg (half of total barb height)
+needle_insert_clip_top_barb_slope_deg   = 60;  // ramp angle from horizontal; apex radial = seg_h / tan(slope)
+needle_insert_clip_top_barb_h_mm        = 2 * needle_insert_clip_top_barb_seg_h_mm;
+needle_insert_clip_top_barb_apex_radial_mm = needle_insert_clip_top_barb_seg_h_mm / tan(needle_insert_clip_top_barb_slope_deg);
+// Pocket radius must stay inside inner barrier ring OD or the subtract wipes the wall — see needle_insert_pocket().
+needle_insert_pocket_inner_barrier_min_wall_mm = 0.12;  // min radial solid left on inner bait barrier ring (OD side)
+needle_insert_pocket_z_above_clip_post_mm  = 0.12;  // wide pocket stage clears post + barb (wider than pin column)
 
 // Computed pin height (from station z=0) — apex flush with top of needle seal disk (not retention barb)
 // Needle insert: base OD = inner barrier center hole ID; coaxial pocket; pin apex at pin_top.

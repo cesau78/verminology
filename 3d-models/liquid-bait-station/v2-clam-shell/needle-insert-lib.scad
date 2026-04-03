@@ -19,27 +19,42 @@ module needle_gasket_ring() {
             ]);
 }
 
-// Six flexible tabs: stem outer face flush with disk OD (R); only barb extends past R — enables insert + flex past bore.
+// Six flex posts on upper base step (gasket land OD); top barb: two ramps at needle_insert_clip_top_barb_slope_deg, extruded across w.
+module needle_insert_retention_clip_top_barb(L, w, h_barb, apex_r) {
+    hm = h_barb / 2;
+    translate([0, w / 2, 0])
+        rotate([90, 0, 0])
+            linear_extrude(height = w, convexity = 4)
+                polygon([
+                    [0, 0],
+                    [L, 0],
+                    [L + apex_r, hm],
+                    [L, h_barb],
+                    [0, h_barb],
+                ]);
+}
+
 module needle_insert_retention_clips() {
-    R = needle_insert_base_bottom_od / 2;
+    R = needle_insert_gasket_land_od / 2;
     w = needle_insert_clip_tangent_width_mm;
     ad = needle_insert_clip_anchor_depth_mm;
     stem = needle_insert_clip_stem_radial_mm;
-    br = needle_insert_clip_barb_radial_mm;
-    bz = needle_insert_clip_barb_axial_mm;
-    z0 = needle_insert_clip_z0;
-    z_body_top = needle_insert_clip_body_z_top;
-    z_barb_top = needle_insert_clip_barb_z_top;
-    z_barb_bot = z_body_top - bz;
+    L = ad + stem;
+    h_barb = needle_insert_clip_top_barb_h_mm;
+    apex_r = needle_insert_clip_top_barb_apex_radial_mm;
+    z_step = needle_insert_base_bottom_h;
+    z0 = needle_insert_clip_z0_above_gasket_step_mm;
+    z_body_top = needle_insert_clip_body_z_top - z_step;
     for (i = [0 : needle_insert_clip_count - 1])
         rotate([0, 0, needle_insert_clip_phase_deg + i * (360 / needle_insert_clip_count)])
             render_if_needed()
-                union() {
-                    translate([R - ad - stem, -w / 2, z0])
-                        cube([ad + stem, w, z_body_top - z0]);
-                    translate([R, -w / 2, z_barb_bot])
-                        cube([br, w, z_barb_top - z_barb_bot]);
-                }
+                translate([0, 0, z_step])
+                    union() {
+                        translate([R - L, -w / 2, z0])
+                            cube([L, w, z_body_top - z0]);
+                        translate([R - L, 0, z_body_top])
+                            needle_insert_retention_clip_top_barb(L, w, h_barb, apex_r);
+                    }
 }
 
 // Lower base step — plain cylinder only (no groove, no difference).
@@ -84,13 +99,23 @@ module needle_insert() {
         }
 }
 
-// Pocket: disk OD + clearance; extra radial margin only when retention clips enabled.
+// Pocket: max of (bottom OD, land + barb) + clearance — not id2+c+apex as extra (that oversize erased inner barrier ring).
+// Capped below inner barrier ring OD so the subtract cannot hollow the full annulus (watertight wall).
 module needle_insert_pocket() {
     c = needle_insert_pocket_clearance;
     ze = needle_insert_pocket_z_extra;
-    r_extra = needle_insert_retention_clips_enabled ? needle_insert_clip_pocket_radial_extra_mm : 0;
-    r_clip = needle_insert_base_bottom_od / 2 + c + r_extra;
-    z_clip_top = inner_barrier_rail_z_top + 0.08;
+    r_body = needle_insert_base_bottom_od / 2 + c;
+    r_barb = needle_insert_retention_clips_enabled
+        ? needle_insert_gasket_land_od / 2 + needle_insert_clip_top_barb_apex_radial_mm + c
+        : 0;
+    r_need = max(r_body, r_barb);
+    r_cap = inner_bait_barrier_od / 2 - needle_insert_pocket_inner_barrier_min_wall_mm;
+    r_clip = min(r_need, r_cap);
+    assert(r_need <= r_cap + 0.02, "needle pocket exceeds inner barrier OD cap — reduce barb apex or slope");
+    z_barb = needle_insert_retention_clips_enabled ? needle_insert_clip_top_barb_h_mm : 0;
+    z_clip_top = max(
+        inner_barrier_rail_z_top + 0.08,
+        needle_insert_clip_body_z_top + z_barb + needle_insert_pocket_z_above_clip_post_mm);
     translate([0, 0, -0.02])
         union() {
             cylinder(h = z_clip_top + 0.02 + ze, r = r_clip);
