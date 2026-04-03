@@ -1,6 +1,6 @@
 // V2 Slit-Valve Liquid Bait Station — Shared Parameters
 // Rigid reservoir drops into an open tray bait station.
-// A central push-pin spreads the TPU slit valve open on bayonet lock.
+// A central push-pin spreads the TPU slit valve open when reservoir is seated.
 
 // ── Performance Settings ──────────────────────────────────────────
 preview = false; // true = faster preview; false = full detail render
@@ -63,22 +63,19 @@ pin_tunnel_count = 3;  // cross-tunnels at base for fluid drainage (120° apart)
 // Straight straw — no cone, open top for fluid flow
 pin_top     = reservoir_seat + valve_disk_h + pin_penetration;  // top of straw
 
-// ── Bayonet Twist-Lock ────────────────────────────────────────────
-// Lugs on reservoir outer wall; straight vertical entry slots in station bore.
-// Reservoir drops in, then twists clockwise (righty-tighty) to lock.
-bayonet_count    = 3;    // number of lugs, evenly spaced
-bayonet_lug_w    = 3;    // lug circumferential width (mm)
-bayonet_lug_h    = 2;    // lug height (mm)
-bayonet_lug_d    = 1.5;  // lug radial protrusion from reservoir wall (mm)
-bayonet_rotation = 5;   // degrees to twist for lock
-bayonet_drop     = 5;    // mm the reservoir drops through vertical slot (pin engagement travel)
-bayonet_lug_z    = 2;    // lug bottom position from reservoir bottom (mm)
+// ── Tab Slide-Lock ────────────────────────────────────────────────
+// Tabs on reservoir outer wall slide straight down into vertical slots
+// in the station bore. No twist — reservoir drops in and seats on tabs.
+tab_count    = 3;    // number of tabs, evenly spaced
+tab_w        = 3;    // tab circumferential width (mm)
+tab_h        = 2;    // tab height (mm)
+tab_d        = 1.5;  // tab radial protrusion from reservoir wall (mm)
+tab_drop     = 5;    // mm the reservoir drops through slot (pin engagement travel)
+tab_z        = 2;    // tab bottom position from reservoir bottom (mm)
 
-// Computed lug z-positions in station coordinates
-lug_z_locked   = reservoir_seat + bayonet_lug_z;                // 10mm
-lug_z_unlocked = reservoir_seat + bayonet_drop + bayonet_lug_z; // 15mm
-// Unlocked (resting above slot): pin tip below valve — no contact.
-// Locked (dropped + twisted CW):  pin pushes past valve top — full spread.
+// Computed tab z-positions in station coordinates
+tab_z_locked   = reservoir_seat + tab_z;                // seated
+tab_z_unlocked = reservoir_seat + tab_drop + tab_z;     // elevated, pin clear
 
 // ── Guard Holes (ant access through outer wall at groove level) ───
 guard_hole_dia   = 3.2;  // hole diameter — ants only

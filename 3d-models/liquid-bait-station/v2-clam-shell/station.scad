@@ -1,5 +1,5 @@
 // V2 Bait Station — Open tray with push-pin, torus groove, ant access holes.
-// The reservoir drops inside; bayonet ramp-lock pushes it onto the pin.
+// The reservoir drops inside; tabs slide into vertical slots and seat onto the pin.
 // Fluid drains through radial channels to a full-circle torus groove.
 // Ants access bait through small holes in the outer wall at groove level.
 
@@ -16,7 +16,7 @@ module bait_station() {
                 station_inner_groove();
                 station_drain_channels();
                 station_central_pocket();
-                station_bayonet_slots();
+                station_tab_slots();
                 station_guard_holes();
             }
             // Pin and hump added after cuts so the bore subtraction doesn't remove them
@@ -36,7 +36,7 @@ module station_solid() {
 
 // ── Bore ──────────────────────────────────────────────────────────
 // Internal cavity where the reservoir sits. Starts at station_floor;
-// the reservoir floats at reservoir_seat held by bayonet lugs,
+// the reservoir floats at reservoir_seat held by tabs,
 // leaving space below for bait to flow to the torus grooves.
 module station_bore() {
     render_if_needed()
@@ -124,37 +124,20 @@ module station_push_pin_channels() {
                     cylinder(h = pin_dia + 1, d = pin_channel_dia);
 }
 
-// ── Bayonet Twist-Lock Slots ──────────────────────────────────────
-// Straight vertical entry slots + horizontal lock channel.
-// Reservoir drops in, then twists clockwise (righty-tighty) to lock.
-// Negative rotation in OpenSCAD = clockwise when viewed from above.
-module station_bayonet_slots() {
-    slot_w     = bayonet_lug_w + clearance * 2;  // width with clearance
-    slot_h     = bayonet_lug_h + clearance * 2;  // height with clearance
-    slot_depth = bayonet_lug_d + clearance + 1;  // radial depth (through inner wall)
-    lock_step  = 5;  // degrees per hull segment
+// ── Tab Slots ─────────────────────────────────────────────────────
+// Straight vertical slots in the station bore wall. Reservoir tabs
+// slide straight down — no twist required.
+module station_tab_slots() {
+    slot_w     = tab_w + clearance * 2;  // width with clearance
+    slot_depth = tab_d + clearance + 1;  // radial depth (through inner wall)
 
-    for (i = [0 : bayonet_count - 1]) {
-        angle = i * (360 / bayonet_count);
+    for (i = [0 : tab_count - 1]) {
+        angle = i * (360 / tab_count);
 
-        // Vertical entry slot — open at top, drops straight to locked height
+        // Vertical slot — open at top, drops straight to seated height
         rotate([0, 0, angle])
-            translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_locked])
-                cube([slot_depth, slot_w, station_height - lug_z_locked + 1]);
-
-        // Horizontal lock channel — extends clockwise (negative angle)
-        // at locked height. hull() between angular steps for smooth arc.
-        for (s = [0 : lock_step : bayonet_rotation - lock_step]) {
-            hull() {
-                rotate([0, 0, angle - s])
-                translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_locked])
-                    cube([slot_depth, slot_w, slot_h]);
-
-                rotate([0, 0, angle - s - lock_step])
-                translate([station_id / 2 - 0.5, -slot_w / 2, lug_z_locked])
-                    cube([slot_depth, slot_w, slot_h]);
-            }
-        }
+            translate([station_id / 2 - 0.5, -slot_w / 2, tab_z_locked])
+                cube([slot_depth, slot_w, station_height - tab_z_locked + 1]);
     }
 }
 
@@ -172,7 +155,7 @@ module station_guard_holes() {
 }
 
 // ── Side Grip Scallops ───────────────────────────────────────────
-// Oval indents on the outer wall for bayonet twist grip.
+// Oval indents on the outer wall for grip.
 // Ellipsoid centered at station_scallop_z — natural taper stops
 // smoothly before the bottom floor.
 module station_side_scallops() {

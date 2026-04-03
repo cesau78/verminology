@@ -1,6 +1,6 @@
 // V2 Reservoir — Rigid flat cylinder that drops into the bait station.
 // TPU slit valve press-fits flush into the floor (no flange, no lip).
-// Bayonet lugs on the outer wall engage ramp-slots in the station bore.
+// Tabs on the outer wall slide into vertical slots in the station bore.
 // To fill: pop valve out from inside, fill through bore, press valve back in.
 
 include <common.scad>
@@ -21,7 +21,7 @@ module reservoir() {
                 }
                 reservoir_ant_tunnel_cutouts();
             }
-            reservoir_bayonet_lugs();
+            reservoir_tabs();
             reservoir_ant_tunnels();
         }
         reservoir_side_scallops();
@@ -53,16 +53,16 @@ module reservoir_valve_bore() {
             cylinder(h = wall + 1, d = valve_bore_id);
 }
 
-// ── Bayonet Lugs ──────────────────────────────────────────────────
-// Tabs on the outer wall that engage the station's ramp-slots.
+// ── Tabs ──────────────────────────────────────────────────────────
+// Tabs on the outer wall that slide into the station's vertical slots.
 // Positioned near the bottom so they're inside the tray when seated.
-module reservoir_bayonet_lugs() {
-    for (i = [0 : bayonet_count - 1]) {
-        angle = i * (360 / bayonet_count);
+module reservoir_tabs() {
+    for (i = [0 : tab_count - 1]) {
+        angle = i * (360 / tab_count);
         rotate([0, 0, angle])
             // -0.01 radially to overlap into shell wall
-            translate([reservoir_od / 2 - 0.01, -bayonet_lug_w / 2, bayonet_lug_z])
-                cube([bayonet_lug_d + 0.01, bayonet_lug_w, bayonet_lug_h]);
+            translate([reservoir_od / 2 - 0.01, -tab_w / 2, tab_z])
+                cube([tab_d + 0.01, tab_w, tab_h]);
     }
 }
 
@@ -137,12 +137,12 @@ module reservoir_ant_tunnel_cutouts() {
 }
 
 // ── Side Grip Scallops ───────────────────────────────────────────
-// Oval indents on the skirt outer wall for bayonet twist grip.
+// Oval indents on the skirt outer wall for grip.
 // Ellipsoid centered at reservoir_scallop_z — natural taper stops
 // smoothly before the top ceiling.
 module reservoir_side_scallops() {
     for (i = [0 : scallop_count - 1])
-        rotate([0, 0, scallop_offset + bayonet_rotation + i * (360 / scallop_count)])
+        rotate([0, 0, scallop_offset + i * (360 / scallop_count)])
             translate([skirt_od / 2, 0, reservoir_scallop_z])
                 scale([scallop_depth, scallop_width / 2, scallop_height / 2])
                     sphere(r = 1);
