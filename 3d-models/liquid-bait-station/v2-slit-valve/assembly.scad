@@ -8,7 +8,7 @@ use <reservoir.scad>
 use <slit-valve.scad>
 
 // ── Settings ──────────────────────────────────────────────────────
-exploded   = true;  // spread parts vertically for inspection
+exploded   = false;  // spread parts vertically for inspection
 explode_gap = 25;    // mm gap in exploded view
 show_valve = true;   // show the TPU slit valve disk
 locked     = true;   // true = locked (pin engaged), false = unlocked (resting)

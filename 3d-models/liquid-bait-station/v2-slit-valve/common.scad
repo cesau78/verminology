@@ -5,10 +5,10 @@
 // ── Performance Settings ──────────────────────────────────────────
 preview = false; // true = faster preview; false = full detail render
 crosssection_view = false;  // cut the model along a plane to inspect internals
-crosssection_axis = "z";   // axis: "x", "y", or "z"
+crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 10;     // position (mm) along the chosen axis
 
-$fn = preview ? 32 : 64;
+$fn = preview ? 32 : 256;
 
 // ── General ───────────────────────────────────────────────────────
 wall      = 2;     // shell wall thickness (mm)
@@ -111,13 +111,17 @@ strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned
 strut_thickness = 1;   // strut wall thickness (mm)
 strut_gap       = valve_bore_id / 2 + 2;  // stop short of valve bore center
 
-// ── Grip Scallops (radial spoke grooves for bayonet twist) ───────
-scallop_count  = 12;   // number of spokes around circumference
-scallop_r      = 10.625; // cutting cylinder radius — 9mm groove width at 1mm depth
-scallop_cut    = 1;    // depth into top/bottom face at the rim corner (mm)
-scallop_pitch  = 15;   // degrees the spoke angles down from center to rim
-mink_r         = 0.5;  // Minkowski sphere radius — rounds grip pad edges (mm)
-grip_pad       = mink_r * 2;  // total pad height = sphere diameter
+// ── Side Grip Scallops (oval indents on outer wall) ──────────────
+scallop_count   = 12;    // number around circumference
+scallop_height  = 28;    // vertical span of each oval indent (mm)
+scallop_width   = 8;     // tangential span — skinny egg shape (mm)
+scallop_depth   = 1.5;   // radial depth of indent into wall (mm)
+// Scallop center in assembled coordinates (z from station bottom)
+scallop_center_z = (reservoir_seat + reservoir_height) / 2;  // midpoint of assembled height
+// Per-part scallop center z
+station_scallop_z   = scallop_center_z;                      // station starts at z=0
+reservoir_scallop_z = scallop_center_z - reservoir_seat;      // reservoir-local coords
+scallop_offset      = 360 / guard_hole_count / 2;            // half-step from ant holes
 
 // ── Utility Modules ───────────────────────────────────────────────
 

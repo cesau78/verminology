@@ -23,23 +23,11 @@ module reservoir() {
             }
             reservoir_bayonet_lugs();
             reservoir_ant_tunnels();
-            reservoir_grip_pad();  // rounded pad on top
         }
-        reservoir_scallops();  // applied last, cuts through rounded pad
+        reservoir_side_scallops();
     }
 }
 
-// ── Grip Pad ─────────────────────────────────────────────────────
-// Minkowski'd disk on the reservoir top. Thin cylinder + sphere gives
-// a rounded-edge pad that the scallops cut through, so ridges between
-// grooves inherit the rounding.
-module reservoir_grip_pad() {
-    translate([0, 0, reservoir_height + mink_r])
-        minkowski() {
-            cylinder(h = 0.01, d = skirt_od - 2 * mink_r);
-            sphere(r = mink_r);
-        }
-}
 
 // ── Shell ─────────────────────────────────────────────────────────
 module reservoir_shell() {
@@ -147,22 +135,16 @@ module reservoir_ant_tunnel_cutouts() {
     }
 }
 
-// ── Grip Scallops ────────────────────────────────────────────────
-// Radial spoke cylinders from center, angled down 15°. The cylinder
-// is high above the part near center (no cut) and gradually intersects
-// the top face near the rim, cutting scallop_cut mm deep at the corner.
-module reservoir_scallops() {
-    spoke_len = skirt_od / 2 + scallop_r;
-    // Position so cylinder bottom = reservoir_height - scallop_cut at rim
-    z_start = reservoir_height - scallop_cut + scallop_r
-              + (skirt_od / 2) * tan(scallop_pitch);
-    scallop_offset = 360 / guard_hole_count / 2;  // half-step from ant holes
+// ── Side Grip Scallops ───────────────────────────────────────────
+// Oval indents on the skirt outer wall for bayonet twist grip.
+// Ellipsoid centered at reservoir_scallop_z — natural taper stops
+// smoothly before the top ceiling.
+module reservoir_side_scallops() {
     for (i = [0 : scallop_count - 1])
-        rotate([0, 0, scallop_offset + i * (360 / scallop_count)])
-            translate([0, 0, z_start])
-                rotate([0, scallop_pitch, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h = spoke_len, r = scallop_r);
+        rotate([0, 0, scallop_offset + bayonet_rotation + i * (360 / scallop_count)])
+            translate([skirt_od / 2, 0, reservoir_scallop_z])
+                scale([scallop_depth, scallop_width / 2, scallop_height / 2])
+                    sphere(r = 1);
 }
 
 // ── Render ────────────────────────────────────────────────────────

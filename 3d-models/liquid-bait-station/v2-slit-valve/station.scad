@@ -22,9 +22,8 @@ module bait_station() {
             // Pin and hump added after cuts so the bore subtraction doesn't remove them
             station_push_pin();
             station_torus_hump();
-            station_grip_pad();  // rounded pad on bottom
         }
-        station_scallops();  // applied last, cuts through rounded pad
+        station_side_scallops();
     }
 }
 
@@ -188,31 +187,16 @@ module station_guard_holes() {
             cylinder(h = hole_length, d = guard_hole_dia);
 }
 
-// ── Grip Pad ─────────────────────────────────────────────────────
-// Minkowski'd disk on the station bottom. Mirrored from reservoir.
-module station_grip_pad() {
-    translate([0, 0, -mink_r - 0.01])
-        minkowski() {
-            cylinder(h = 0.01, d = station_od - 2 * mink_r);
-            sphere(r = mink_r);
-        }
-}
-
-// ── Grip Scallops ────────────────────────────────────────────────
-// Radial spoke cylinders from center, angled up 15° (mirrored from
-// reservoir). Cuts scallop_cut mm into the bottom face at the rim.
-module station_scallops() {
-    spoke_len = station_od / 2 + scallop_r;
-    // Position so cylinder top = scallop_cut at rim
-    z_start = scallop_cut - scallop_r
-              - (station_od / 2) * tan(scallop_pitch);
-    scallop_offset = 360 / guard_hole_count / 2;  // half-step from ant holes
+// ── Side Grip Scallops ───────────────────────────────────────────
+// Oval indents on the outer wall for bayonet twist grip.
+// Ellipsoid centered at station_scallop_z — natural taper stops
+// smoothly before the bottom floor.
+module station_side_scallops() {
     for (i = [0 : scallop_count - 1])
         rotate([0, 0, scallop_offset + i * (360 / scallop_count)])
-            translate([0, 0, z_start])
-                rotate([0, -scallop_pitch, 0])
-                    rotate([0, 90, 0])
-                        cylinder(h = spoke_len, r = scallop_r);
+            translate([station_od / 2, 0, station_scallop_z])
+                scale([scallop_depth, scallop_width / 2, scallop_height / 2])
+                    sphere(r = 1);
 }
 
 // ── Render ────────────────────────────────────────────────────────
