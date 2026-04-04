@@ -11,12 +11,12 @@ module needle_seal() {
 
 // Stop-collar flange — wider cylinder that sits on the reservoir floor
 // and prevents the seal from being pushed into the reservoir.
-// Clearance hole here — sealing happens at the disk.
+// Center bore matches disk (seal_hole_dia) for one continuous inner diameter.
 module needle_seal_flange() {
     difference() {
         cylinder(h = valve_flange_h, d = valve_flange_od);
         translate([0, 0, -0.5])
-            cylinder(h = valve_flange_h + 1, d = pin_dia + 0.1);
+            cylinder(h = valve_flange_h + 1, d = seal_hole_dia);
     }
 }
 

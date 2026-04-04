@@ -79,7 +79,7 @@ inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
 inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
-needle_insert_disk_od_clearance_dia = 0.2;   // reference for TPU relaxed outer R vs hole ID (diametric mm)
+needle_insert_disk_od_clearance_dia = 0.4;   // diametric mm in relaxed outer-R math vs base hole (larger → smaller gasket OD)
 needle_insert_base_bottom_od = inner_bait_barrier_id;   // bottom 1 mm — matches station central hole ID
 needle_insert_top_vs_bottom_od_delta_dia = 2;   // upper step OD = bottom OD − this (mm, diameter)
 needle_insert_gasket_land_od = needle_insert_base_bottom_od - needle_insert_top_vs_bottom_od_delta_dia;
