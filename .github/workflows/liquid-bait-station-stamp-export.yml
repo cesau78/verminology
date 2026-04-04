@@ -31,4 +31,5 @@ jobs:
         with:
           name: liquid-bait-station-stls
           path: |
-            3d-models/liquid-bait-station/latest-build/*.stl
+            3d-models/liquid-bait-station/latest-builds/**/*.stl
+            3d-models/liquid-bait-station/latest-builds/**/*.md

@@ -1,7 +1,7 @@
 // V2 Reservoir — Rigid flat cylinder that drops into the bait station.
-// TPU slit valve press-fits flush into the floor (no flange, no lip).
+// TPU needle seal press-fits flush into the floor (flange collar on the underside).
 // Tabs on the outer wall slide into vertical slots in the station bore.
-// To fill: pop valve out from inside, fill through bore, press valve back in.
+// To fill: pop seal out from inside, fill through bore, press seal back in.
 
 include <common.scad>
 
@@ -44,8 +44,8 @@ module reservoir_cavity() {
 }
 
 // ── Valve Bore ────────────────────────────────────────────────────
-// Through-hole in the center of the floor for the TPU slit valve.
-// Snug sliding fit — valve disk slides in and the wider flange collar
+// Through-hole in the center of the floor for the TPU needle seal disk.
+// Snug sliding fit — disk slides in and the wider flange collar
 // sits on the outside of the floor, preventing push-through.
 module reservoir_valve_bore() {
     render_if_needed()

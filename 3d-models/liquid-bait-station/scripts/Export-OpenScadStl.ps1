@@ -72,16 +72,20 @@ if (-not $openscad) {
 }
 
 # STL export: full mesh quality, no cross-section (independent of JSON "preview" = prototype stamp).
+# Each export "stl" may contain {product_version} — replaced with trimmed product_version from this file.
 $exportDefines = @("-D", "mesh_preview=false", "-D", "crosssection_view=false")
+$verTag = [string]$cfg.product_version.Trim()
 
 foreach ($exp in $exports) {
     $in = Join-Path $ModelDir $exp.scad
-    $out = Join-Path $ModelDir $exp.stl
+    $relStl = [string]$exp.stl -replace '\{product_version\}', $verTag
+    $relStl = $relStl -replace '/', [IO.Path]::DirectorySeparatorChar
+    $out = [IO.Path]::GetFullPath([IO.Path]::Combine($ModelDir, $relStl))
     $outDir = Split-Path -Parent $out
     if (-not (Test-Path -LiteralPath $outDir)) {
         New-Item -ItemType Directory -Path $outDir -Force | Out-Null
     }
-    Write-Host "Export $($exp.scad) -> $($exp.stl)"
+    Write-Host "Export $($exp.scad) -> $relStl"
     & $openscad @exportDefines -o $out $in
     if ($LASTEXITCODE -ne 0) {
         throw "OpenSCAD failed for $($exp.scad) (exit $LASTEXITCODE)"

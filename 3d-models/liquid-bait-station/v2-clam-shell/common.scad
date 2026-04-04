@@ -1,6 +1,6 @@
-// V2 Slit-Valve Liquid Bait Station — Shared Parameters
+// V2 Liquid Bait Station (clam shell) — Shared Parameters
 // Rigid reservoir drops into an open tray bait station.
-// A central push-pin spreads the TPU slit valve open when reservoir is seated.
+// Central push-pin engages the TPU needle seal in the reservoir floor.
 
 // ── Performance Settings ──────────────────────────────────────────
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
@@ -36,7 +36,7 @@ reservoir_top_wall = 3;   // ceiling thickness (mm) — thicker than shell wall 
 reservoir_cavity_h = reservoir_height - wall - reservoir_top_wall;
 // Volume: π × 36.5² × cavity_h (slightly less with dome / features)
 
-// ── TPU Slit Valve ────────────────────────────────────────────────
+// ── Reservoir floor bore + TPU needle seal stack (valve_* shared with needle-seal.scad) ──
 valve_disk_od  = 16;                        // disk outer diameter (mm)
 valve_bore_id  = valve_disk_od;             // snug sliding fit — FDM shrinkage holds it
 valve_disk_h   = wall;                      // same as floor thickness — flush inside
@@ -45,9 +45,6 @@ valve_flange_h  = 2;                        // flange height (mm) — prevents p
 valve_retainer_od = valve_disk_od + 1;       // top retention disk OD — just past bore edge
 valve_retainer_id = valve_disk_od - 4;       // top retention disk ID — 2mm lip inward
 valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
-// Needle insert base: bottom ring at inner barrier hole ID; upper step OD = bottom OD − 2 mm (diametric).
-slit_width    = 0.2;  // effectively touching — prints closed, pin forces open
-slit_length   = 10;   // each arm of the X-slit (mm)
 
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85 - unit_od_reduction;   // mm — was 85 at reduction 0; keeps rim margin vs reservoir_od
@@ -92,10 +89,10 @@ needle_insert_disk_od        = needle_insert_gasket_land_od;
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;
 
-// ── Push Pin / Straw (station center, spreads slit valve / engages needle seal) ─
-pin_dia         = 6;   // pin outer diameter (mm) — smaller than slit_length for proper spread
+// ── Push Pin / Straw (station center; engages TPU needle seal in reservoir floor) ─
+pin_dia         = 6;   // pin outer diameter (mm)
 
-// ── Needle Seal (slit-free variant — TPU interference fit around pin) ─
+// ── Needle Seal — TPU interference fit around pin ─
 seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)

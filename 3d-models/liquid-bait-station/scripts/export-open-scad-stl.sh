@@ -53,10 +53,12 @@ if ! command -v openscad >/dev/null 2>&1; then
 fi
 
 EXPORT_DEFS=(-D "mesh_preview=false" -D "crosssection_view=false")
+VER="$(jq -r '.product_version' "$CONFIG" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
 while IFS= read -r row; do
   scad="$(echo "$row" | jq -r '.scad')"
-  stl="$(echo "$row" | jq -r '.stl')"
+  stl_raw="$(echo "$row" | jq -r '.stl')"
+  stl="${stl_raw//\{product_version\}/$VER}"
   out_path="$MODEL_DIR/$stl"
   mkdir -p "$(dirname "$out_path")"
   echo "Export $scad -> $stl"

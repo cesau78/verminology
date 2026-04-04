@@ -1,7 +1,5 @@
 // Needle Seal for V2 Liquid Bait Station — Print in TPU 90A (or 80A for easier flex)
-// Same form factor as the slit valve but with a simple center hole instead of slits.
-// The hole is undersized relative to the pin for a water-tight interference fit.
-// TPU stretches over the pin and grips it; no slits needed.
+// Center hole is undersized vs the pin for a water-tight interference fit; TPU stretches over the pin.
 
 include <common.scad>
 
@@ -36,8 +34,7 @@ module needle_seal_disk() {
 }
 
 // ── Top Retention Disk ────────────────────────────────────────────
-// Same as slit valve — thin ring catches on the inside of the
-// reservoir floor to prevent pull-out.
+// Thin ring catches on the inside of the reservoir floor to prevent pull-out.
 module needle_seal_barb() {
     taper_inset = valve_retainer_h * tan(30) * 2;
     translate([0, 0, valve_flange_h + valve_disk_h])
@@ -47,7 +44,7 @@ module needle_seal_barb() {
                      d2 = valve_retainer_od - taper_inset);
             translate([0, 0, -0.5])
                 cylinder(h = valve_retainer_h + 1, d = valve_retainer_id);
-            // Flow slots — same as slit valve for fluid passage
+            // Flow slots for fluid passage
             for (i = [0 : 3])
                 rotate([0, 0, i * 90 + 45])
                     translate([-1, -valve_retainer_od / 2, -0.5])
