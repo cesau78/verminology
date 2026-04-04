@@ -23,12 +23,17 @@ function Get-ScadStem([string]$relativeScadPath) {
     return ($name -replace '-', '_')
 }
 
-# Stamp lines: 1 brand, 2 product, 3 version (+ Prototype if preview)
+# Stamp lines: 1 brand, 2 product, 3 version (+ Prototype if preview, unless LBS_PRODUCTION=1)
 $line1 = [string]$cfg.brand_name
 $line2 = [string]$cfg.product_name
-$line3 = [string]$cfg.product_version.Trim()
-if ($cfg.preview -eq $true) {
-    $line3 = ("{0} Prototype" -f $line3).Trim()
+$verTag = [string]$cfg.product_version.Trim()
+$isProduction = ($env:LBS_PRODUCTION -eq "1")
+if ($isProduction) {
+    $line3 = $verTag
+} elseif ($cfg.preview -eq $true) {
+    $line3 = ("{0} Prototype" -f $verTag).Trim()
+} else {
+    $line3 = $verTag
 }
 
 $stampPath = Join-Path $ModelDir "stamp_generated.scad"
@@ -71,14 +76,16 @@ if (-not $openscad) {
     throw "OpenSCAD not found. Set OPENSCAD_PATH or install OpenSCAD."
 }
 
-# STL export: full mesh quality, no cross-section (independent of JSON "preview" = prototype stamp).
-# Each export "stl" may contain {product_version} — replaced with trimmed product_version from this file.
+# STL export: full mesh quality, no cross-section.
+# Each export "stl" may contain {version_folder}: <product_version> or <product_version>-prototype
+# unless env LBS_PRODUCTION=1 (production → version only, no Prototype stamp).
 $exportDefines = @("-D", "mesh_preview=false", "-D", "crosssection_view=false")
-$verTag = [string]$cfg.product_version.Trim()
+$versionFolder = if ($isProduction) { $verTag } else { "{0}-prototype" -f $verTag }
 
 foreach ($exp in $exports) {
     $in = Join-Path $ModelDir $exp.scad
-    $relStl = [string]$exp.stl -replace '\{product_version\}', $verTag
+    $relStl = [string]$exp.stl -replace '\{version_folder\}', $versionFolder
+    $relStl = $relStl -replace '\{product_version\}', $versionFolder
     $relStl = $relStl -replace '/', [IO.Path]::DirectorySeparatorChar
     $out = [IO.Path]::GetFullPath([IO.Path]::Combine($ModelDir, $relStl))
     $outDir = Split-Path -Parent $out

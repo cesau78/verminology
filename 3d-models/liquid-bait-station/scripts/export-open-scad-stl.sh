@@ -21,11 +21,20 @@ PREVIEW="$(jq -r '.preview' "$CONFIG")"
 BRAND="$(jq -r '.brand_name' "$CONFIG")"
 PROD="$(jq -r '.product_name' "$CONFIG")"
 VER="$(jq -r '.product_version' "$CONFIG" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-LINE3="$VER"
-if [[ "$PREVIEW" == "true" ]]; then
-  LINE3="$VER Prototype"
-  LINE3="$(echo "$LINE3" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+# Output folder: latest-builds/<version> for production (LBS_PRODUCTION=1), else .../<version>-prototype.
+# Stamp "Prototype" follows JSON preview only when not production.
+if [[ "${LBS_PRODUCTION:-}" == "1" ]]; then
+  VERSION_FOLDER="$VER"
+  LINE3="$VER"
+else
+  VERSION_FOLDER="${VER}-prototype"
+  LINE3="$VER"
+  if [[ "$PREVIEW" == "true" ]]; then
+    LINE3="$VER Prototype"
+  fi
 fi
+LINE3="$(echo "$LINE3" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
 STAMP_FILE="$MODEL_DIR/stamp_generated.scad"
 {
@@ -53,12 +62,12 @@ if ! command -v openscad >/dev/null 2>&1; then
 fi
 
 EXPORT_DEFS=(-D "mesh_preview=false" -D "crosssection_view=false")
-VER="$(jq -r '.product_version' "$CONFIG" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
 while IFS= read -r row; do
   scad="$(echo "$row" | jq -r '.scad')"
   stl_raw="$(echo "$row" | jq -r '.stl')"
-  stl="${stl_raw//\{product_version\}/$VER}"
+  stl="${stl_raw//\{version_folder\}/$VERSION_FOLDER}"
+  stl="${stl//\{product_version\}/$VERSION_FOLDER}"
   out_path="$MODEL_DIR/$stl"
   mkdir -p "$(dirname "$out_path")"
   echo "Export $scad -> $stl"

@@ -6,27 +6,27 @@
   "exports": [
     {
       "scad": "v2-clam-shell/reservoir.scad",
-      "stl": "latest-builds/{product_version}/reservoir.stl",
+      "stl": "latest-builds/{version_folder}/reservoir.stl",
       "stamp": null
     },
     {
       "scad": "v2-clam-shell/station.scad",
-      "stl": "latest-builds/{product_version}/station.stl",
+      "stl": "latest-builds/{version_folder}/station.stl",
       "stamp": { "face": "bottom" }
     },
     {
       "scad": "v2-clam-shell/needle-insert-export.scad",
-      "stl": "latest-builds/{product_version}/needle-insert.stl",
+      "stl": "latest-builds/{version_folder}/needle-insert.stl",
       "stamp": null
     },
     {
       "scad": "v2-clam-shell/needle-gasket-export.scad",
-      "stl": "latest-builds/{product_version}/needle-gasket.stl",
+      "stl": "latest-builds/{version_folder}/needle-gasket.stl",
       "stamp": null
     },
     {
       "scad": "v2-clam-shell/needle-seal.scad",
-      "stl": "latest-builds/{product_version}/needle-seal.stl",
+      "stl": "latest-builds/{version_folder}/needle-seal.stl",
       "stamp": null
     }
   ]

@@ -9,7 +9,7 @@ crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
-$fn = mesh_preview ? 32 : 64;
+$fn = mesh_preview ? 32 : 128;
 
 // ── General ───────────────────────────────────────────────────────
 wall      = 2;     // shell wall thickness (mm)

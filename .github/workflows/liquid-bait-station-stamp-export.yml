@@ -1,4 +1,5 @@
-name: Liquid bait station — stamp sync and STL export
+# Prototype export: outputs under latest-builds/<product_version>-prototype/, stamp may include "Prototype".
+name: Liquid bait station — stamp sync and prototype STL export
 
 on:
   push:
