@@ -18,8 +18,8 @@ STL paths in `print-stamp-config.json` use `{version_folder}`, expanded by the e
 
 | Build | Output folder | Stamp |
 |--------|----------------|--------|
-| Local default; **Actions** “stamp sync and prototype STL export” on `main` | `latest-builds/<product_version>-prototype/` | Adds ` Prototype` when `preview` is true |
-| Production (`LBS_PRODUCTION=1`, e.g. workflow **Liquid bait station — production STL export**) | `latest-builds/<product_version>/` | Version only (no Prototype) |
+| Local default; **Actions** *Liquid bait station — build* on push to `main` | `latest-builds/<product_version>-prototype/` | Adds ` Prototype` when `preview` is true |
+| Production (`LBS_PRODUCTION=1`, e.g. **Liquid bait station — build** with production export enabled) | `latest-builds/<product_version>/` | Version only (no Prototype) |
 
 Mesh quality for exported STLs uses `$fn = 128` when `mesh_preview=false` (see `v2-clam-shell/common.scad`).
 
@@ -33,6 +33,6 @@ Mesh quality for exported STLs uses `$fn = 128` when `mesh_preview=false` (see `
 
 Regenerate: `scripts/Export-OpenScadStl.ps1` or `scripts/export-open-scad-stl.sh` from `3d-models/liquid-bait-station`. For a production folder locally: `LBS_PRODUCTION=1 ./scripts/export-open-scad-stl.sh` (bash) or `$env:LBS_PRODUCTION='1'; .\scripts\Export-OpenScadStl.ps1` (PowerShell).
 
-**Production on GitHub:** Actions → *Liquid bait station — production STL export* → *Run workflow*. Set `ref` to your release tag or SHA; optionally set `verify_product_version` to match `print-stamp-config.json` (e.g. `v2.4.0`).
+**Production on GitHub:** Actions → *Liquid bait station — build* → *Run workflow*. Enable *production STL export*, set `ref` to your release tag or SHA, and optionally set `verify_product_version` to match `print-stamp-config.json`.
 
 Legacy v1 double-torus STLs may sit in the same version folder if copied manually; they are not produced by the v2 export list.

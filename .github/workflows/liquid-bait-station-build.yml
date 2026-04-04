@@ -1,0 +1,91 @@
+# Ordered build: (1) stamp sync + prototype STL export, (2) assembly validation render,
+# (3) production STL export — only on manual dispatch when enabled (slow, $fn=128).
+#
+# Push to main runs (1) then (2). Use Actions → Run workflow to also run (3).
+
+name: Liquid bait station — build
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "3d-models/liquid-bait-station/**"
+      - ".github/workflows/liquid-bait-station-build.yml"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build (branch, tag, or SHA)"
+        required: true
+        type: string
+        default: "main"
+      run_production_export:
+        description: "After validation, run production STL export (latest-builds/<version>/, no Prototype stamp)"
+        required: true
+        type: boolean
+        default: true
+      verify_product_version:
+        description: "Optional — fail production step unless print-stamp-config.json product_version equals this (e.g. v2.4.0)"
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Install OpenSCAD and jq
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y openscad jq
+
+      - name: Stamp sync and prototype STL export
+        working-directory: 3d-models/liquid-bait-station
+        run: |
+          chmod +x scripts/export-open-scad-stl.sh
+          ./scripts/export-open-scad-stl.sh
+
+      - name: Validate v2 assembly (smoke test)
+        run: |
+          OUT_DIR="$GITHUB_WORKSPACE/3d-models/liquid-bait-station/.ci-validation"
+          mkdir -p "$OUT_DIR"
+          openscad -o "$OUT_DIR/v2-assembly.stl" \
+            -D "mesh_preview=true" -D "crosssection_view=false" \
+            "$GITHUB_WORKSPACE/3d-models/liquid-bait-station/v2-clam-shell/assembly.scad"
+
+      - name: Verify product_version (optional)
+        if: github.event_name == 'workflow_dispatch' && inputs.run_production_export && inputs.verify_product_version != ''
+        working-directory: 3d-models/liquid-bait-station
+        run: |
+          cfg="$(jq -r '.product_version' print-stamp-config.json | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          want="$(echo "${{ inputs.verify_product_version }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          if [[ "$cfg" != "$want" ]]; then
+            echo "::error::print-stamp-config.json has product_version='$cfg', expected '$want'"
+            exit 1
+          fi
+          echo "product_version matches: $cfg"
+
+      - name: Production STL export
+        if: github.event_name == 'workflow_dispatch' && inputs.run_production_export
+        working-directory: 3d-models/liquid-bait-station
+        env:
+          LBS_PRODUCTION: "1"
+        run: |
+          chmod +x scripts/export-open-scad-stl.sh
+          ./scripts/export-open-scad-stl.sh
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: liquid-bait-station-build
+          path: |
+            3d-models/liquid-bait-station/latest-builds/**/*.stl
+            3d-models/liquid-bait-station/latest-builds/**/*.md
+            3d-models/liquid-bait-station/.ci-validation/v2-assembly.stl
+            3d-models/liquid-bait-station/stamp_generated.scad
