@@ -1,1 +1,4 @@
 *.3mf
+
+# CI smoke-test STL (not source-controlled)
+3d-models/liquid-bait-station/.ci-validation/
