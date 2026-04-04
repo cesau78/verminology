@@ -1,90 +1,33 @@
-name: Liquid Bait Station Validation
+# Smoke-test that v2 clam-shell SCAD renders (fast mesh_preview; full mesh uses stamp-export / production workflows).
 
-# Allow the workflow to push commits back to the repository
-permissions:
-  contents: write
+name: Liquid Bait Station Validation
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - '3d-models/liquid-bait-station/*.scad'
-      - '.github/workflows/liquid-bait-station-validation.yml'
+      - "3d-models/liquid-bait-station/**"
+      - ".github/workflows/liquid-bait-station-validation.yml"
 
 jobs:
   validate-scad:
     runs-on: ubuntu-latest
     container:
       image: openscad/openscad:latest
-    outputs:
-      has_artifact: ${{ steps.check_artifacts.outputs.has_artifact }}
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Render Liquid Bait Station
-        # Ensure preview and cross-section overrides are applied so CI renders full model
-        env:
-          PREVIEW: 'false'
-          CROSSSECTION_VIEW: 'false'
+      - name: Render v2 assembly (smoke test)
         run: |
-          openscad -o 3d-models/liquid-bait-station/liquid-bait-station.stl 3d-models/liquid-bait-station/liquid-bait-station.scad \
-            -D "preview=$PREVIEW" -D "crosssection_view=$CROSSSECTION_VIEW" \
-            -D 'liquid_bait_station();'
+          mkdir -p /tmp/liquid-bait-station-ci
+          openscad -o /tmp/liquid-bait-station-ci/v2-assembly.stl \
+            -D "mesh_preview=true" -D "crosssection_view=false" \
+            3d-models/liquid-bait-station/v2-clam-shell/assembly.scad
 
-      - name: Render O-Ring
-        run: |
-          openscad -o 3d-models/liquid-bait-station/oring.stl 3d-models/liquid-bait-station/oring.scad \
-            -D "preview=false"
-
-      - name: Upload STLs
+      - name: Upload validation STL
         uses: actions/upload-artifact@v4
         with:
-          name: liquid-bait-station-stls
-          path: |
-            3d-models/liquid-bait-station/*.stl
-
-      - name: Check for generated STLs
-        id: check_artifacts
-        run: |
-          if ls 3d-models/liquid-bait-station/*.stl 1> /dev/null 2>&1; then
-            echo "has_artifact=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_artifact=false" >> $GITHUB_OUTPUT
-          fi
-
-  commit-stl:
-    name: Commit Generated STL
-    runs-on: ubuntu-latest
-    needs: validate-scad
-    if: needs.validate-scad.outputs.has_artifact == 'true'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-
-      - name: Download generated STL artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: liquid-bait-station-stls
-          path: liquid-bait-station-artifacts
-
-      - name: Copy STL into repo
-        run: |
-          mkdir -p liquid-bait-station
-          # move any stl produced into the repo directory (overwrite)
-          mv -f liquid-bait-station-artifacts/*.stl 3d-models/liquid-bait-station/ || true
-
-      - name: Commit and push generated STL
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add 3d-models/liquid-bait-station/*.stl || true
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: update generated STL [skip ci]"
-            git push origin HEAD:${{ github.ref_name }}
-          fi
+          name: liquid-bait-station-v2-assembly-validation
+          path: /tmp/liquid-bait-station-ci/v2-assembly.stl
