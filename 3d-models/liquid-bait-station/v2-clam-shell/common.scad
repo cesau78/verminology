@@ -194,15 +194,16 @@ tab_z        = 2;    // tab bottom position from reservoir bottom (mm)
 tab_z_locked   = reservoir_seat + tab_z;                // seated
 tab_z_unlocked = reservoir_seat + tab_drop + tab_z;     // elevated, pin clear
 
-// Outward bottom barbs (reservoir) + bore pockets; angles = vertical wall land (between guide tabs).
-bottom_barb_w_mm    = 3.85;  // tangential width — inside 4 mm land between 0.2 mm gaps (mm)
+// Outward bottom barbs (reservoir) + station channel / catch; angles = vertical wall land (between guide tabs).
+bottom_barb_w_mm    = 3.85;  // tangential width — inside land between 0.2 mm gaps (mm)
 bottom_barb_h_mm    = 2.4;   // vertical span on outer wall from reservoir z = bottom_barb_z0_mm (mm)
-bottom_barb_d_mm    = 1.05;  // max radial protrusion past reservoir_od (mm)
+bottom_barb_d_mm    = 1.1;   // radial protrusion past land outer face (incl. rib) (mm)
 bottom_barb_root_mm = 1.35;  // depth merged into shell (mm) — sturdy root
 // Barb sits on lowest outer wall: base of OD sleeve (z < 0 when extension > 0).
 bottom_barb_z0_mm   = -reservoir_outer_wall_extension_below_mm;
-// Pocket in station bore (subtractive); must clear barb tip + fit
-bottom_barb_pocket_depth_mm = bottom_barb_d_mm + clearance + 0.45;
+// Station: 1 mm-deep sliding channel on bore ID; rectangular hole through wall at seated barb (collapsed).
+bottom_barb_channel_depth_mm  = 1;    // radial depth of vertical track from bore inner surface (mm)
+bottom_barb_catch_z_margin_mm = 0.25; // extra Z on catch opening vs barb height (mm, each end)
 
 // ── Guard Holes (ant access through outer wall into tray) ───────────
 guard_hole_dia   = 3.2;  // hole diameter — ants only
@@ -225,9 +226,10 @@ skirt_id       = reservoir_id;                                  // 73mm — over
 skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 
-// Vertical feature in main OD wall (between guide tabs): 4 mm wall land with 0.2 mm cut each side; stop below skirt.
-reservoir_vertical_slot_land_mm = 4;    // tangential width of solid wall left between cuts (mm)
-reservoir_vertical_slot_gap_mm  = 0.2;  // tangential gap cut on each side of the land (mm)
+// Vertical feature in main OD wall (between guide tabs): land tangential width + 0.2 mm kerfs each side; rib extends land +Z outward.
+reservoir_vertical_slot_land_mm              = 4;    // tangential width of solid wall between cuts (mm)
+reservoir_vertical_slot_gap_mm               = 0.2;  // tangential gap cut on each side of the land (mm)
+reservoir_vertical_land_radial_extension_mm  = 1;    // cube added past nominal OD on the land only (mm)
 
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
 strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned

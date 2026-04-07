@@ -14,7 +14,7 @@ module bait_station() {
                     station_solid();
                     station_bore();
                     station_tab_slots();
-                    station_bottom_barb_pockets();
+                    station_bottom_barb_channel_and_catch();
                     station_guard_holes();
                 }
                 // Barriers after bore; needle is a separate printed insert (pocket subtracted below)
@@ -123,34 +123,48 @@ module station_tab_slots() {
     }
 }
 
-// ── Bottom barb pockets ───────────────────────────────────────────
-// Radial notches aligned with reservoir vertical-land barbs (between guide tabs).
-module station_bottom_barb_pockets() {
-    pocket_w = bottom_barb_w_mm + clearance * 2;
-    z_bot    = reservoir_seat + bottom_barb_z0_mm - clearance;
-    z_h      = bottom_barb_h_mm + clearance * 2;
-    r_in     = station_id / 2 - 0.5;
-    depth    = bottom_barb_pocket_depth_mm;
+// ── Bottom barb channel + catch ─────────────────────────────────
+// 1 mm-deep vertical channel on bore ID for barb to slide (insert + tab travel).
+// At seated (collapsed) height: rectangular cut through full wall for outward barb to engage.
+module station_bottom_barb_channel_and_catch() {
+    pw    = bottom_barb_w_mm + clearance * 2;
+    r0    = station_id / 2 - 0.02;
+    ch    = bottom_barb_channel_depth_mm;
+    z_lo  = station_floor - 0.02;
+    z_hi  = station_height + 0.5;
+    zh    = z_hi - z_lo;
+
+    z_c0  = reservoir_seat + bottom_barb_z0_mm - bottom_barb_catch_z_margin_mm - clearance;
+    z_ch  = bottom_barb_h_mm + 2 * (bottom_barb_catch_z_margin_mm + clearance);
+    r_thru = station_od / 2 - r0 + 0.6;
 
     for (k = [0 : tab_count - 1]) {
         i = floor((k + 0.5) * ant_tunnel_count / tab_count);
         angle = i * (360 / ant_tunnel_count);
-        rotate([0, 0, angle])
-            translate([r_in, -pocket_w / 2, z_bot])
-                cube([depth, pocket_w, z_h]);
+        rotate([0, 0, angle]) {
+            translate([r0, -pw / 2, z_lo])
+                cube([ch + 0.02, pw, zh]);
+            translate([r0, -pw / 2, z_c0])
+                cube([r_thru, pw, z_ch]);
+        }
     }
 }
 
 // ── Guard Holes ───────────────────────────────────────────────────
 // Small holes through the outer wall into the tray cavity.
+// Skip every tab_count-th hole from a fixed phase so three azimuths stay solid —
+// same angles as the old reservoir skirt retention clips (no longer used).
 module station_guard_holes() {
     hole_length = station_od / 2 - guard_hole_inner_r + 1;
+    skip        = guard_hole_count / tab_count;
+    skip_start  = round((360 / tab_count / 2) / (360 / guard_hole_count));
 
     for (i = [0 : guard_hole_count - 1])
-        rotate([0, 0, i * (360 / guard_hole_count)])
-            translate([guard_hole_inner_r, 0, guard_hole_z])
-                rotate([0, 90, 0])
-                    cylinder(h = hole_length, d = guard_hole_dia);
+        if ((i - skip_start) % skip != 0)
+            rotate([0, 0, i * (360 / guard_hole_count)])
+                translate([guard_hole_inner_r, 0, guard_hole_z])
+                    rotate([0, 90, 0])
+                        cylinder(h = hole_length, d = guard_hole_dia);
 }
 
 // ── Side Grip Scallops ───────────────────────────────────────────

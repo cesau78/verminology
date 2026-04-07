@@ -22,6 +22,7 @@ module reservoir() {
                 reservoir_ant_tunnel_cutouts();
                 reservoir_vertical_wall_slots();
             }
+            reservoir_vertical_land_outward_rib();
             reservoir_tabs();
             reservoir_ant_tunnels();
             reservoir_bottom_outward_barbs();
@@ -88,12 +89,13 @@ module reservoir_bottom_outward_barbs() {
     root = bottom_barb_root_mm;
     z0   = bottom_barb_z0_mm;
     lip  = max(0.5, h * 0.22);
+    ro   = reservoir_od / 2 + reservoir_vertical_land_radial_extension_mm;
 
     for (k = [0 : tab_count - 1]) {
         i = floor((k + 0.5) * ant_tunnel_count / tab_count);
         a = i * (360 / ant_tunnel_count);
         rotate([0, 0, a])
-            translate([reservoir_od / 2 - root - 0.02, -w / 2, z0])
+            translate([ro - root - 0.02, -w / 2, z0])
                 hull() {
                     cube([root + 0.02, w, 0.35]);
                     translate([0, 0, h - lip])
@@ -173,7 +175,7 @@ module reservoir_ant_tunnel_cutouts() {
 }
 
 // ── Vertical wall slots (between guide tabs) ────────────────────
-// Three sites: 0.2 mm cuts through the wall on each side of a 4 mm-wide wall ribbon (+Z).
+// Three sites: 0.2 mm cuts each side of tangential land; see reservoir_vertical_land_outward_rib (+Z).
 // Angles bisect adjacent guide tabs (60° / 180° / 300° for 3× tabs, 12× tunnels).
 module reservoir_vertical_wall_slots() {
     land = reservoir_vertical_slot_land_mm;
@@ -194,6 +196,24 @@ module reservoir_vertical_wall_slots() {
             translate([x0, h, z0])
                 cube([xd, g, zh]);
         }
+    }
+}
+
+// ── Vertical land outward rib ───────────────────────────────────
+// 1 mm (param) past nominal OD on the land strip only — tangential span = land width.
+module reservoir_vertical_land_outward_rib() {
+    land = reservoir_vertical_slot_land_mm;
+    dx   = reservoir_vertical_land_radial_extension_mm;
+    ext  = reservoir_outer_wall_extension_below_mm;
+    z0   = -ext - 0.01;
+    zh   = skirt_z_start - z0 + 0.01;
+
+    for (k = [0 : tab_count - 1]) {
+        i = floor((k + 0.5) * ant_tunnel_count / tab_count);
+        a = i * (360 / ant_tunnel_count);
+        rotate([0, 0, a])
+            translate([reservoir_od / 2 - 0.02, -land / 2, z0])
+                cube([dx + 0.02, land, zh]);
     }
 }
 
