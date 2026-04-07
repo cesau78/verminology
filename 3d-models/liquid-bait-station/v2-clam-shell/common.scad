@@ -5,7 +5,9 @@
 // ── Performance Settings ──────────────────────────────────────────
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
 mesh_preview = true;
-crosssection_view = true;  // cut the model along a plane to inspect internals
+// F5 only: draw inner rail disk in red (gray disk is still real geometry when false — see station_inner_barrier_inner_rail_disk_cut).
+inner_barrier_inner_rail_disk_color_preview = false;
+crosssection_view = false;  // cut the model along a plane to inspect internals
 crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -137,8 +139,6 @@ needle_gasket_assembly_z = needle_insert_base_bottom_h + needle_insert_base_gask
 inner_bait_barrier_hole_count   = 6;
 inner_bait_barrier_hole_dia     = pin_channel_dia;
 inner_bait_barrier_hole_z       = station_floor + inner_bait_barrier_hole_dia / 2;  // lower tangent at z = station_floor
-inner_bait_barrier_hole_start_r = inner_bait_barrier_id / 2 - 0.35;   // start just inside inner opening
-inner_bait_barrier_hole_length  = inner_bait_barrier_radial_t + 0.8; // through 1 mm wall with margin
 // Rails (paired strips): angularly between the six wall holes (holes at 0°, 60°, …).
 inner_barrier_rail_phase_deg   = 30;    // deg offset vs hole at i=0 (midway between holes)
 inner_barrier_rail_width_mm   = 1;
@@ -149,6 +149,34 @@ inner_barrier_rail_extend_below_floor_mm = 1; // grow downward from tray floor t
 inner_barrier_rail_z_offset_mm  = 1;   // shift whole rail stack +Z (mm)
 inner_barrier_rail_z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm + inner_barrier_rail_z_offset_mm;
 inner_barrier_rail_z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm + inner_barrier_rail_z_offset_mm;
+// Inner barrier: annular disk (station_inner_barrier_inner_rail_disk) extends inward same as rails; slots cut at rail sites for insert slide-in.
+inner_barrier_inner_rail_disk_inward_mm = inner_barrier_rail_inward_mm;
+inner_barrier_inner_rail_disk_slot_clearance_mm = 0.35; // each side of slot vs rail inner faces (tangential)
+// Cut past the ring inner face toward the bore so no shelf shows in the clip slide path.
+inner_barrier_inner_rail_disk_slot_bottom_inward_mm = 0.65;
+// Disk vs nominal bore / rails: tiny overlaps so section view has no seam between wall, disk, and rail cubes (rails stay [id2−rin, id2]).
+inner_barrier_inner_rail_disk_outer_overlap_mm = 0.06; // extend OD past bore ID into wall annulus (mm)
+inner_barrier_inner_rail_disk_inner_overlap_mm = 0.04; // extend inner lip inward into rail volume vs nominal id2−rin (mm); keeps rail inner face flush in union
+// Increase disk inner radius (mm) so the bore-side face lines up with the guide rails in print / section.
+inner_barrier_inner_rail_disk_inner_flush_mm = 0.25;
+inner_barrier_inner_rail_disk_r_outer_mm =
+    inner_bait_barrier_id / 2 + inner_barrier_inner_rail_disk_outer_overlap_mm;
+inner_barrier_inner_rail_disk_r_inner_mm =
+    inner_bait_barrier_id / 2
+    - inner_barrier_inner_rail_disk_inward_mm
+    - inner_barrier_inner_rail_disk_inner_overlap_mm
+    + inner_barrier_inner_rail_disk_inner_flush_mm;
+// Wall holes: start inside bore past disk inner lip; length pierces base wall + full disk + margin.
+inner_bait_barrier_hole_start_r =
+    inner_barrier_inner_rail_disk_r_inner_mm
+    - inner_barrier_inner_rail_disk_slot_bottom_inward_mm
+    - 0.35;
+inner_bait_barrier_hole_length  =
+    inner_bait_barrier_radial_t
+    + inner_barrier_inner_rail_disk_inward_mm
+    + inner_barrier_inner_rail_disk_slot_bottom_inward_mm
+    + inner_barrier_inner_rail_disk_outer_overlap_mm
+    + 0.8;
 
 // Needle insert retention posts — 6×, same phase as inner barrier rails; flex posts + 2 mm top barb (two ramps at slope_deg).
 // Clips sit on the upper base step (gasket land OD), not the lower 1 mm ring — leaves lower ring for TPU gasket.

@@ -104,6 +104,7 @@ module needle_insert() {
 
 // Pocket: max of (bottom OD, land + barb) + clearance — not id2+c+apex as extra (that oversize erased inner barrier ring).
 // Capped below inner barrier ring OD so the subtract cannot hollow the full annulus (watertight wall).
+// Inner rail disk is unioned after this pocket in bait_station() (like guide rails); otherwise this cylinder would erase it.
 module needle_insert_pocket() {
     c = needle_insert_pocket_clearance;
     ze = needle_insert_pocket_z_extra;
