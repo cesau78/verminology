@@ -179,7 +179,7 @@ needle_insert_pocket_z_above_clip_post_mm  = 0.12;  // wide pocket stage clears 
 pin_top          = reservoir_seat + valve_disk_h;
 
 // ── Tab Slide-Lock ────────────────────────────────────────────────
-// Tabs on reservoir outer wall slide straight down into vertical slots
+// Guide tabs on reservoir outer wall slide straight down into vertical slots
 // in the station bore. No twist — reservoir drops in and seats on tabs.
 tab_count    = 3;    // number of tabs, evenly spaced
 tab_w        = 3;    // tab circumferential width (mm)
@@ -231,24 +231,33 @@ reservoir_scallop_z = scallop_center_z - reservoir_seat;      // reservoir-local
 scallop_offset      = 360 / guard_hole_count / 2;            // half-step from ant holes
 
 // ── Retention Clips (snap-fit lock between skirt and station) ────
-// Flexible arms hang down from the skirt inner face into grooves
-// in the station bore wall. Angled barb snaps into a notch when
-// seated — easy to push in, very difficult to pull apart.
-clip_count      = 3;     // same as tab_count, offset 60° from tabs
-clip_w          = 4;     // circumferential width (mm)
-clip_t          = 1.5;   // radial thickness of the arm (mm)
+// Arms fill the full radial annulus from reservoir OD to skirt / station OD
+// (not thin slivers). Station cuts a through-wall channel around each arm;
+// larger inward barb snaps into the channel bottom — harder pull-out, ramp
+// eased slightly so insertion does not tear the arm.
+clip_count      = 3;     // same as tab_count, offset 60° from guide tabs
+clip_w          = 4.5;   // circumferential width (mm)
 clip_length     = station_height;  // arm extends to station floor (mm)
-clip_barb_d     = 0.4;   // barb protrusion beyond arm thickness (mm) — PETG flex limit
-clip_ramp_angle = 30;    // ramp angle from arm surface (degrees) — printable slope
+clip_barb_d     = 0.62;  // barb protrusion inward past arm inner face (mm)
+clip_ramp_angle = 32;    // ramp angle from arm surface (degrees)
 clip_barb_h     = 2 * clip_barb_d / tan(clip_ramp_angle);  // diamond height from angle
-// Clip outer face is flush with skirt OD (= station OD).
-// Channels cut into the station's outer wall surface.
-clip_r          = station_od / 2;  // outer face radius of clip arm
+clip_r          = station_od / 2;  // outer face radius (= skirt OD)
+clip_r_inner    = reservoir_od / 2 - 0.01;  // inner face — bonded into reservoir shell
+// Station: through-wall arc channel from slightly inside bore (surrounds clip arm).
+clip_channel_r_inner = station_id / 2 - 0.5;
+// Bottom notch: cuts deeper inward so the barb has a pocket to snap into.
+clip_notch_h         = clip_barb_h + clearance * 2;
+clip_notch_r_inner   = clip_channel_r_inner - clip_barb_d - clearance;
 clip_angle      = clip_w / (PI * station_od) * 360;  // angular span (degrees)
 // Notch z in station coords: clips are fully seated when reservoir is at reservoir_seat.
 // Clip bottom in station coords = reservoir_seat + skirt_z_start - clip_length
 clip_bottom_z   = reservoir_seat + skirt_z_start - clip_length;  // 6mm
 clip_notch_z    = clip_bottom_z;  // notch at the barb's seated position
+
+// Inward shelves at retention clip channels only (not guide slots — would block tabs).
+// Outer face on bore ID (station_id/2); extends toward axis into the cavity.
+station_wall_gap_bridge_t     = 2;   // radial depth inward from bore ID (mm)
+station_wall_gap_bridge_cover = 2;   // arc overlap onto wall land each side of groove (mm)
 
 // ── Edge Fillet ──────────────────────────────────────────────────
 fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)

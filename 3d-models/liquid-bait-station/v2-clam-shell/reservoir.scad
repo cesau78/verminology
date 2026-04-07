@@ -54,7 +54,7 @@ module reservoir_valve_bore() {
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────
-// Tabs on the outer wall that slide into the station's vertical slots.
+// Guide tabs on the outer wall slide into the station's vertical slots.
 // Positioned near the bottom so they're inside the tray when seated.
 module reservoir_tabs() {
     for (i = [0 : tab_count - 1]) {
@@ -157,9 +157,7 @@ module reservoir_top_fillet() {
 }
 
 // ── Retention Clips ──────────────────────────────────────────────
-// Flexible arms hanging down from the skirt inner face. Each arm
-// has an inward-facing barb at the bottom: ramped on the bottom
-// edge (slides in easily) and flat on top (resists pull-out).
+// Full radial thickness from reservoir OD to skirt OD; inward barb at bottom.
 // Offset 60° from guide tabs so they don't share slots.
 module reservoir_retention_clips() {
     tab_offset = 360 / tab_count / 2;  // 60° offset from guide tabs
@@ -167,16 +165,13 @@ module reservoir_retention_clips() {
         a = tab_offset + i * (360 / clip_count);
         rotate([0, 0, a])
             translate([0, 0, skirt_z_start - clip_length]) {
-                // Curved arm — arc shell flush with skirt OD
-                arc_shell(clip_r, clip_r - clip_t, clip_length, clip_angle);
-                // Barb — pointed D-shape: ramps out at 30° to max
-                // protrusion at midpoint, mirrors back to arm thickness
+                arc_shell(clip_r, clip_r_inner, clip_length, clip_angle);
                 rotate([0, 0, -clip_angle / 2])
                     rotate_extrude(angle = clip_angle)
                         polygon([
-                            [clip_r - clip_t, 0],
-                            [clip_r - clip_t - clip_barb_d, clip_barb_h / 2],
-                            [clip_r - clip_t, clip_barb_h]
+                            [clip_r_inner, 0],
+                            [clip_r_inner - clip_barb_d, clip_barb_h / 2],
+                            [clip_r_inner, clip_barb_h]
                         ]);
             }
     }

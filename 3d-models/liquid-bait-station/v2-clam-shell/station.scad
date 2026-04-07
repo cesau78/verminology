@@ -27,6 +27,7 @@ module bait_station() {
         }
         // Rails extend into needle pocket region; union after pocket so they are not subtracted.
         station_inner_barrier_rails();
+        station_wall_gap_bridges();
     }
 }
 
@@ -109,16 +110,14 @@ module station_inner_barrier_rails() {
 }
 
 // ── Tab Slots ─────────────────────────────────────────────────────
-// Straight vertical slots in the station bore wall. Reservoir tabs
+// Straight vertical slots in the station bore wall. Guide tabs
 // slide straight down — no twist required.
 module station_tab_slots() {
-    slot_w     = tab_w + clearance * 2;  // width with clearance
-    slot_depth = tab_d + clearance + 1;  // radial depth (through inner wall)
+    slot_w     = tab_w + clearance * 2;
+    slot_depth = tab_d + clearance + 1;
 
     for (i = [0 : tab_count - 1]) {
         angle = i * (360 / tab_count);
-
-        // Vertical slot — open at top, drops straight to seated height
         rotate([0, 0, angle])
             translate([station_id / 2 - 0.5, -slot_w / 2, tab_z_locked])
                 cube([slot_depth, slot_w, station_height - tab_z_locked + 1]);
@@ -126,29 +125,46 @@ module station_tab_slots() {
 }
 
 // ── Retention Clip Grooves ────────────────────────────────────────
-// Curved channels cut into the station's outer wall for the
-// reservoir's retention clips to slide into. A deeper notch at the
-// seated position lets the barb snap in. Offset 60° from tab slots.
+// Through-wall arc channel wraps each full-thickness clip; a deeper
+// arc at the bottom (clip_notch_*) catches the barb. Offset 60° from guide tabs.
 module station_clip_grooves() {
-    tab_offset = 360 / tab_count / 2;  // 60° from guide tabs
-    groove_d   = clip_t + clearance;    // radial depth into outer wall
-    groove_ang = (clip_w + clearance * 2) / (PI * station_od) * 360;
-    // Notch: deeper pocket for the barb to snap into
-    notch_d    = clip_t + clip_barb_d + clearance;
-    notch_h    = clip_barb_h + clearance * 2;
+    tab_offset  = 360 / tab_count / 2;
+    groove_ang  = (clip_w + clearance * 2) / (PI * station_od) * 360;
+    r_outer_cut = station_od / 2 + 1;
+    z_notch_top = clip_notch_z + clip_notch_h;
+    h_upper     = station_height - z_notch_top + 1;
 
     for (i = [0 : clip_count - 1]) {
         a = tab_offset + i * (360 / clip_count);
         rotate([0, 0, a]) {
-            // Vertical groove — open at top, arc channel into outer wall
-            translate([0, 0, clip_notch_z + notch_h])
-                arc_shell(clip_r + 1, clip_r - groove_d,
-                          station_height - clip_notch_z - notch_h + 1, groove_ang);
-            // Snap notch — deeper arc pocket at the bottom for barb
+            translate([0, 0, z_notch_top])
+                arc_shell(r_outer_cut, clip_channel_r_inner, h_upper, groove_ang);
             translate([0, 0, clip_notch_z])
-                arc_shell(clip_r + 1, clip_r - notch_d,
-                          notch_h, groove_ang);
+                arc_shell(r_outer_cut, clip_notch_r_inner, clip_notch_h, groove_ang);
         }
+    }
+}
+
+// ── Wall gap bridges ──────────────────────────────────────────────
+// Clip grooves only: arc shelf with outer face on bore ID, extending inward
+// toward the axis; spans groove + cover on each land. Guide slots omitted
+// so reservoir tabs can pass through.
+module station_wall_gap_bridges() {
+    r_id = station_id / 2;
+    t    = station_wall_gap_bridge_t;
+    c    = station_wall_gap_bridge_cover;
+
+    tab_offset  = 360 / tab_count / 2;
+    groove_ang  = (clip_w + clearance * 2) / (PI * station_od) * 360;
+    ang_extra   = (c / r_id) * (180 / PI);
+    bridge_ang  = groove_ang + 2 * ang_extra;
+    h_clip      = station_height - clip_notch_z + 0.02;
+
+    for (i = [0 : clip_count - 1]) {
+        a = tab_offset + i * (360 / clip_count);
+        rotate([0, 0, a])
+            translate([0, 0, clip_notch_z])
+                arc_shell(r_id, r_id - t, h_clip, bridge_ang);
     }
 }
 
