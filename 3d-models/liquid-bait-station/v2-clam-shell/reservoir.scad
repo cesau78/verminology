@@ -20,10 +20,11 @@ module reservoir() {
                     reservoir_skirt();
                 }
                 reservoir_ant_tunnel_cutouts();
+                reservoir_vertical_wall_slots();
             }
             reservoir_tabs();
             reservoir_ant_tunnels();
-            reservoir_retention_clips();
+            reservoir_bottom_outward_barbs();
         }
         reservoir_side_scallops();
         reservoir_top_fillet();
@@ -31,9 +32,20 @@ module reservoir() {
 }
 
 // ── Shell ─────────────────────────────────────────────────────────
+// Main cylinder plus optional lower annulus (outer wall only — no skirt).
 module reservoir_shell() {
+    ext = reservoir_outer_wall_extension_below_mm;
     render_if_needed()
-        cylinder(h = reservoir_height, d = reservoir_od);
+        union() {
+            cylinder(h = reservoir_height, d = reservoir_od);
+            if (ext > 0)
+                translate([0, 0, -ext])
+                    difference() {
+                        cylinder(h = ext, d = reservoir_od);
+                        translate([0, 0, -0.01])
+                            cylinder(h = ext + 0.02, d = reservoir_id);
+                    }
+        }
 }
 
 // ── Internal Cavity ───────────────────────────────────────────────
@@ -63,6 +75,30 @@ module reservoir_tabs() {
             // -0.01 radially to overlap into shell wall
             translate([reservoir_od / 2 - 0.01, -tab_w / 2, tab_z])
                 cube([tab_d + 0.01, tab_w, tab_h]);
+    }
+}
+
+// ── Bottom outward barbs ────────────────────────────────────────
+// On the vertical wall ribbon (same azimuth as reservoir_vertical_wall_slots),
+// not on guide tabs. Hull: ramped bottom, flat lip on top.
+module reservoir_bottom_outward_barbs() {
+    w    = bottom_barb_w_mm;
+    h    = bottom_barb_h_mm;
+    d    = bottom_barb_d_mm;
+    root = bottom_barb_root_mm;
+    z0   = bottom_barb_z0_mm;
+    lip  = max(0.5, h * 0.22);
+
+    for (k = [0 : tab_count - 1]) {
+        i = floor((k + 0.5) * ant_tunnel_count / tab_count);
+        a = i * (360 / ant_tunnel_count);
+        rotate([0, 0, a])
+            translate([reservoir_od / 2 - root - 0.02, -w / 2, z0])
+                hull() {
+                    cube([root + 0.02, w, 0.35]);
+                    translate([0, 0, h - lip])
+                        cube([root + d + 0.02, w, lip]);
+                }
     }
 }
 
@@ -136,6 +172,31 @@ module reservoir_ant_tunnel_cutouts() {
     }
 }
 
+// ── Vertical wall slots (between guide tabs) ────────────────────
+// Three sites: 0.2 mm cuts through the wall on each side of a 4 mm-wide wall ribbon (+Z).
+// Angles bisect adjacent guide tabs (60° / 180° / 300° for 3× tabs, 12× tunnels).
+module reservoir_vertical_wall_slots() {
+    land = reservoir_vertical_slot_land_mm;
+    g    = reservoir_vertical_slot_gap_mm;
+    h    = land / 2;
+    ext  = reservoir_outer_wall_extension_below_mm;
+    z0   = -ext - 0.01;
+    zh   = skirt_z_start - z0 + 0.01;
+    xd   = (reservoir_od - reservoir_id) / 2 + 0.04;
+    x0   = reservoir_id / 2 - 0.02;
+
+    for (k = [0 : tab_count - 1]) {
+        i = floor((k + 0.5) * ant_tunnel_count / tab_count);
+        angle = i * (360 / ant_tunnel_count);
+        rotate([0, 0, angle]) {
+            translate([x0, -h - g, z0])
+                cube([xd, g, zh]);
+            translate([x0, h, z0])
+                cube([xd, g, zh]);
+        }
+    }
+}
+
 // ── Side Grip Scallops ───────────────────────────────────────────
 // Oval indents on the skirt outer wall for grip.
 // Ellipsoid centered at reservoir_scallop_z — natural taper stops
@@ -154,27 +215,6 @@ module reservoir_top_fillet() {
     translate([0, 0, reservoir_height])
         mirror([0, 0, 1])
             edge_round(skirt_od, fillet_r);
-}
-
-// ── Retention Clips ──────────────────────────────────────────────
-// Full radial thickness from reservoir OD to skirt OD; inward barb at bottom.
-// Offset 60° from guide tabs so they don't share slots.
-module reservoir_retention_clips() {
-    tab_offset = 360 / tab_count / 2;  // 60° offset from guide tabs
-    for (i = [0 : clip_count - 1]) {
-        a = tab_offset + i * (360 / clip_count);
-        rotate([0, 0, a])
-            translate([0, 0, skirt_z_start - clip_length]) {
-                arc_shell(clip_r, clip_r_inner, clip_length, clip_angle);
-                rotate([0, 0, -clip_angle / 2])
-                    rotate_extrude(angle = clip_angle)
-                        polygon([
-                            [clip_r_inner, 0],
-                            [clip_r_inner - clip_barb_d, clip_barb_h / 2],
-                            [clip_r_inner, clip_barb_h]
-                        ]);
-            }
-    }
 }
 
 // ── Render ────────────────────────────────────────────────────────

@@ -14,7 +14,7 @@ module bait_station() {
                     station_solid();
                     station_bore();
                     station_tab_slots();
-                    station_clip_grooves();
+                    station_bottom_barb_pockets();
                     station_guard_holes();
                 }
                 // Barriers after bore; needle is a separate printed insert (pocket subtracted below)
@@ -27,7 +27,6 @@ module bait_station() {
         }
         // Rails extend into needle pocket region; union after pocket so they are not subtracted.
         station_inner_barrier_rails();
-        station_wall_gap_bridges();
     }
 }
 
@@ -124,47 +123,21 @@ module station_tab_slots() {
     }
 }
 
-// ── Retention Clip Grooves ────────────────────────────────────────
-// Through-wall arc channel wraps each full-thickness clip; a deeper
-// arc at the bottom (clip_notch_*) catches the barb. Offset 60° from guide tabs.
-module station_clip_grooves() {
-    tab_offset  = 360 / tab_count / 2;
-    groove_ang  = (clip_w + clearance * 2) / (PI * station_od) * 360;
-    r_outer_cut = station_od / 2 + 1;
-    z_notch_top = clip_notch_z + clip_notch_h;
-    h_upper     = station_height - z_notch_top + 1;
+// ── Bottom barb pockets ───────────────────────────────────────────
+// Radial notches aligned with reservoir vertical-land barbs (between guide tabs).
+module station_bottom_barb_pockets() {
+    pocket_w = bottom_barb_w_mm + clearance * 2;
+    z_bot    = reservoir_seat + bottom_barb_z0_mm - clearance;
+    z_h      = bottom_barb_h_mm + clearance * 2;
+    r_in     = station_id / 2 - 0.5;
+    depth    = bottom_barb_pocket_depth_mm;
 
-    for (i = [0 : clip_count - 1]) {
-        a = tab_offset + i * (360 / clip_count);
-        rotate([0, 0, a]) {
-            translate([0, 0, z_notch_top])
-                arc_shell(r_outer_cut, clip_channel_r_inner, h_upper, groove_ang);
-            translate([0, 0, clip_notch_z])
-                arc_shell(r_outer_cut, clip_notch_r_inner, clip_notch_h, groove_ang);
-        }
-    }
-}
-
-// ── Wall gap bridges ──────────────────────────────────────────────
-// Clip grooves only: arc shelf with outer face on bore ID, extending inward
-// toward the axis; spans groove + cover on each land. Guide slots omitted
-// so reservoir tabs can pass through.
-module station_wall_gap_bridges() {
-    r_id = station_id / 2;
-    t    = station_wall_gap_bridge_t;
-    c    = station_wall_gap_bridge_cover;
-
-    tab_offset  = 360 / tab_count / 2;
-    groove_ang  = (clip_w + clearance * 2) / (PI * station_od) * 360;
-    ang_extra   = (c / r_id) * (180 / PI);
-    bridge_ang  = groove_ang + 2 * ang_extra;
-    h_clip      = station_height - clip_notch_z + 0.02;
-
-    for (i = [0 : clip_count - 1]) {
-        a = tab_offset + i * (360 / clip_count);
-        rotate([0, 0, a])
-            translate([0, 0, clip_notch_z])
-                arc_shell(r_id, r_id - t, h_clip, bridge_ang);
+    for (k = [0 : tab_count - 1]) {
+        i = floor((k + 0.5) * ant_tunnel_count / tab_count);
+        angle = i * (360 / ant_tunnel_count);
+        rotate([0, 0, angle])
+            translate([r_in, -pocket_w / 2, z_bot])
+                cube([depth, pocket_w, z_h]);
     }
 }
 
@@ -172,17 +145,12 @@ module station_wall_gap_bridges() {
 // Small holes through the outer wall into the tray cavity.
 module station_guard_holes() {
     hole_length = station_od / 2 - guard_hole_inner_r + 1;
-    // Indices to skip: clip grooves at 60°, 180°, 300°
-    // = indices 2, 6, 10 at 30° spacing (360/12)
-    skip = guard_hole_count / clip_count;  // every 4th hole
-    skip_start = round((360 / tab_count / 2) / (360 / guard_hole_count));  // index 2
 
     for (i = [0 : guard_hole_count - 1])
-        if ((i - skip_start) % skip != 0)
-            rotate([0, 0, i * (360 / guard_hole_count)])
-                translate([guard_hole_inner_r, 0, guard_hole_z])
-                    rotate([0, 90, 0])
-                        cylinder(h = hole_length, d = guard_hole_dia);
+        rotate([0, 0, i * (360 / guard_hole_count)])
+            translate([guard_hole_inner_r, 0, guard_hole_z])
+                rotate([0, 90, 0])
+                    cylinder(h = hole_length, d = guard_hole_dia);
 }
 
 // ── Side Grip Scallops ───────────────────────────────────────────

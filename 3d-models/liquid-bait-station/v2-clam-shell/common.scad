@@ -5,7 +5,7 @@
 // ── Performance Settings ──────────────────────────────────────────
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
 mesh_preview = true;
-crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -34,6 +34,8 @@ reservoir_height   = 30;                          // total height (mm)
 reservoir_id       = reservoir_od - wall * 2;     // 73mm internal diameter
 reservoir_top_wall = 3;   // ceiling thickness (mm) — thicker than shell wall for puncture resistance
 reservoir_cavity_h = reservoir_height - wall - reservoir_top_wall;
+// Extra side-wall sleeve below z = 0 only (annulus OD–ID); skirt / cavity / floor unchanged.
+reservoir_outer_wall_extension_below_mm = 3;
 // Volume: π × 36.5² × cavity_h (slightly less with dome / features)
 
 // ── Reservoir floor bore + TPU needle seal stack (valve_* shared with needle-seal.scad) ──
@@ -192,6 +194,16 @@ tab_z        = 2;    // tab bottom position from reservoir bottom (mm)
 tab_z_locked   = reservoir_seat + tab_z;                // seated
 tab_z_unlocked = reservoir_seat + tab_drop + tab_z;     // elevated, pin clear
 
+// Outward bottom barbs (reservoir) + bore pockets; angles = vertical wall land (between guide tabs).
+bottom_barb_w_mm    = 3.85;  // tangential width — inside 4 mm land between 0.2 mm gaps (mm)
+bottom_barb_h_mm    = 2.4;   // vertical span on outer wall from reservoir z = bottom_barb_z0_mm (mm)
+bottom_barb_d_mm    = 1.05;  // max radial protrusion past reservoir_od (mm)
+bottom_barb_root_mm = 1.35;  // depth merged into shell (mm) — sturdy root
+// Barb sits on lowest outer wall: base of OD sleeve (z < 0 when extension > 0).
+bottom_barb_z0_mm   = -reservoir_outer_wall_extension_below_mm;
+// Pocket in station bore (subtractive); must clear barb tip + fit
+bottom_barb_pocket_depth_mm = bottom_barb_d_mm + clearance + 0.45;
+
 // ── Guard Holes (ant access through outer wall into tray) ───────────
 guard_hole_dia   = 3.2;  // hole diameter — ants only
 guard_hole_count = 12;   // number around circumference
@@ -213,6 +225,10 @@ skirt_id       = reservoir_id;                                  // 73mm — over
 skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 
+// Vertical feature in main OD wall (between guide tabs): 4 mm wall land with 0.2 mm cut each side; stop below skirt.
+reservoir_vertical_slot_land_mm = 4;    // tangential width of solid wall left between cuts (mm)
+reservoir_vertical_slot_gap_mm  = 0.2;  // tangential gap cut on each side of the land (mm)
+
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
 strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned
 strut_thickness = 1;   // strut wall thickness (mm)
@@ -229,35 +245,6 @@ scallop_center_z = (reservoir_seat + reservoir_height) / 2;  // midpoint of asse
 station_scallop_z   = scallop_center_z;                      // station starts at z=0
 reservoir_scallop_z = scallop_center_z - reservoir_seat;      // reservoir-local coords
 scallop_offset      = 360 / guard_hole_count / 2;            // half-step from ant holes
-
-// ── Retention Clips (snap-fit lock between skirt and station) ────
-// Arms fill the full radial annulus from reservoir OD to skirt / station OD
-// (not thin slivers). Station cuts a through-wall channel around each arm;
-// larger inward barb snaps into the channel bottom — harder pull-out, ramp
-// eased slightly so insertion does not tear the arm.
-clip_count      = 3;     // same as tab_count, offset 60° from guide tabs
-clip_w          = 4.5;   // circumferential width (mm)
-clip_length     = station_height;  // arm extends to station floor (mm)
-clip_barb_d     = 0.62;  // barb protrusion inward past arm inner face (mm)
-clip_ramp_angle = 32;    // ramp angle from arm surface (degrees)
-clip_barb_h     = 2 * clip_barb_d / tan(clip_ramp_angle);  // diamond height from angle
-clip_r          = station_od / 2;  // outer face radius (= skirt OD)
-clip_r_inner    = reservoir_od / 2 - 0.01;  // inner face — bonded into reservoir shell
-// Station: through-wall arc channel from slightly inside bore (surrounds clip arm).
-clip_channel_r_inner = station_id / 2 - 0.5;
-// Bottom notch: cuts deeper inward so the barb has a pocket to snap into.
-clip_notch_h         = clip_barb_h + clearance * 2;
-clip_notch_r_inner   = clip_channel_r_inner - clip_barb_d - clearance;
-clip_angle      = clip_w / (PI * station_od) * 360;  // angular span (degrees)
-// Notch z in station coords: clips are fully seated when reservoir is at reservoir_seat.
-// Clip bottom in station coords = reservoir_seat + skirt_z_start - clip_length
-clip_bottom_z   = reservoir_seat + skirt_z_start - clip_length;  // 6mm
-clip_notch_z    = clip_bottom_z;  // notch at the barb's seated position
-
-// Inward shelves at retention clip channels only (not guide slots — would block tabs).
-// Outer face on bore ID (station_id/2); extends toward axis into the cavity.
-station_wall_gap_bridge_t     = 2;   // radial depth inward from bore ID (mm)
-station_wall_gap_bridge_cover = 2;   // arc overlap onto wall land each side of groove (mm)
 
 // ── Edge Fillet ──────────────────────────────────────────────────
 fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
