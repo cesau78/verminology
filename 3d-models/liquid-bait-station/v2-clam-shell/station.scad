@@ -1,7 +1,7 @@
 // V2 Bait Station — Open tray with push-pin, flat floor, ant access holes.
 // The reservoir drops inside; tabs slide into vertical slots and seat onto the pin.
 // Ants access bait through small holes in the outer wall into the tray cavity.
-// Outer + inner bait barrier rings; inner ring has holes and vertical rails + filler between them.
+// Outer + inner bait barrier rings; inner ring has holes and vertical rails (no filler behind clip slots).
 
 needle_insert_as_library = true;
 include <needle-insert.scad>
@@ -26,8 +26,9 @@ module bait_station() {
             station_side_scallops();
             part_bottom_info_stamp_deboss(station_stamp_bottom, station_od);
         }
-        // Rails extend into needle pocket region; union after pocket so they are not subtracted.
+        // Rails + flex retention tabs (between rails); union after pocket so they are not subtracted.
         station_inner_barrier_rails();
+        station_inner_barrier_retention_tabs();
     }
 }
 
@@ -59,7 +60,7 @@ module station_bait_barrier_ring() {
 }
 
 // ── Inner Bait Barrier Ring ───────────────────────────────────────
-// Same Z span as outer; 1″ OD, 1 mm wall; pin channels + six wall holes.
+// Same Z span as outer; 1″ OD, 1 mm wall; pin channels + six wall holes + relief behind needle clips.
 module station_inner_bait_barrier_ring() {
     render_if_needed()
         difference() {
@@ -71,7 +72,22 @@ module station_inner_bait_barrier_ring() {
                 }
             needle_insert_channels();
             station_inner_barrier_wall_holes();
+            station_inner_barrier_post_wall_relief();
         }
+}
+
+// Cut annulus wall behind each needle clip slot (same phase as rails); tangential span = gap between rail inner faces.
+module station_inner_barrier_post_wall_relief() {
+    id2 = inner_bait_barrier_id / 2;
+    od2 = inner_bait_barrier_od / 2;
+    wall_r = od2 - id2;
+    mid_r = (id2 + od2) / 2;
+    gap_t = 2 * inner_barrier_rail_y_offset_mm - inner_barrier_rail_width_mm;
+    zc = bait_barrier_bottom_z + bait_barrier_h / 2;
+    for (i = [0 : inner_bait_barrier_hole_count - 1])
+        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)])
+            translate([mid_r, 0, zc])
+                cube([wall_r + 0.25, gap_t + 0.2, bait_barrier_h + 0.02], center = true);
 }
 
 // Six radial holes through inner barrier wall (needle channel size), flush with tray floor top.
@@ -83,9 +99,54 @@ module station_inner_barrier_wall_holes() {
                     cylinder(h = inner_bait_barrier_hole_length, d = inner_bait_barrier_hole_dia);
 }
 
+// Flex tab: floor foot in the rail gap; outer face vertical at inner-barrier OD; inner side V points toward -X (needle).
+// Profile is XZ (2nd coord = station Z); rotate([90,0,0]) then linear_extrude → tangential tab_w.
+module station_inner_barrier_retention_tabs() {
+    gap_t = 2 * inner_barrier_rail_y_offset_mm - inner_barrier_rail_width_mm;
+    tab_w = gap_t - 2 * inner_barrier_retention_tab_gap_clearance_mm;
+    id2 = inner_bait_barrier_id / 2;
+    od2 = inner_bait_barrier_od / 2;
+    t = inner_barrier_retention_tab_radial_thickness_mm;
+    z_floor = bait_barrier_bottom_z;
+    z_foot_top = z_floor + inner_barrier_retention_tab_floor_foot_h_mm;
+    z_barb_base_abs = needle_insert_clip_body_z_top - needle_insert_clip_top_barb_drop_mm;
+    z_tab_top = bait_barrier_top_z;
+    h_barb = needle_insert_clip_top_barb_h_mm;
+    hm = h_barb / 2;
+    v_depth = inner_barrier_retention_tab_v_depth_mm;
+    v_ha = inner_barrier_retention_tab_v_half_angle_deg;
+    // Inner tab wall (toward needle): x = id2 - t; V tip further inward for barb catch
+    x_wall_in = id2 - t;
+    x_v_tip = max(x_wall_in - v_depth, id2 / 2); // don't cross axis
+    z_v_apex = z_barb_base_abs + hm;
+    // Symmetric V arms so profile stays ordered (no self-intersection if foot clamp would cross z_v_top)
+    dz_geo = (x_wall_in - x_v_tip) / tan(v_ha);
+    dz_up = z_tab_top - 0.02 - z_v_apex;
+    dz_dn = z_v_apex - (z_foot_top + 0.05);
+    dz = min(dz_geo, dz_up, dz_dn);
+    z_v_top = z_v_apex + dz;
+    z_v_bot = z_v_apex - dz;
+
+    for (i = [0 : inner_bait_barrier_hole_count - 1])
+        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)])
+            rotate([90, 0, 0])
+                linear_extrude(height = tab_w, center = true)
+                    polygon([
+                        // CCW in (radial X, station Z): foot bottom, outer vertical, top, inner wall + V, foot top step, foot inner edge
+                        [id2, z_floor],
+                        [od2, z_floor],
+                        [od2, z_tab_top],
+                        [x_wall_in, z_tab_top],
+                        [x_wall_in, z_v_top],
+                        [x_v_tip, z_v_apex],
+                        [x_wall_in, z_v_bot],
+                        [x_wall_in, z_foot_top],
+                        [id2, z_foot_top],
+                    ]);
+}
+
 // Two 1 mm-wide rails per site (tangential ±Y), 2 mm inward from inner barrier ID.
-// Filler back plate between rails: radial slab from gasket land OD to barrier ID (upper-step annulus);
-// needle clips sit on the land OD and flex inward — they do not occupy this outer radial gap.
+// No filler slab behind the needle-retention clip slots — clips flex into open tray space past the rails.
 module station_inner_barrier_rails() {
     w = inner_barrier_rail_width_mm;
     rin = inner_barrier_rail_inward_mm;
@@ -98,15 +159,10 @@ module station_inner_barrier_rails() {
     // +X local = outward; rail occupies x in [id2 - rin, id2], centered at id2 - rin/2
     xc = id2 - rin / 2;
     for (i = [0 : inner_bait_barrier_hole_count - 1])
-        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)]) {
+        rotate([0, 0, inner_barrier_rail_phase_deg + i * (360 / inner_bait_barrier_hole_count)])
             for (sgn = [-1, 1])
                 translate([xc, sgn * yo, zc])
                     cube([rin, w, zh], center = true);
-            nw = inner_barrier_rail_fill_width_mm;
-            rf = inner_barrier_rail_fill_inward_mm;
-            translate([id2 - rf / 2, 0, zc])
-                cube([rf, nw, zh], center = true);
-        }
 }
 
 // ── Tab Slots ─────────────────────────────────────────────────────
