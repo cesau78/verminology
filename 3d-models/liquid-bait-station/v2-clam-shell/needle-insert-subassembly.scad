@@ -1,7 +1,8 @@
 // Station shell + needle insert + TPU ring — sub-assembly preview (F5). Ring on upper base step OD; crosssection_view for torus.
 // Default: mated. Set exploded = true to separate insert and gasket from the pocket.
 
-include <needle-insert-lib.scad>
+needle_insert_as_library = true;
+include <needle-insert.scad>
 use <station.scad>
 
 crosssection_view = true;

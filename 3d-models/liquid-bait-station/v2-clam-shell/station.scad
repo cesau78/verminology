@@ -3,7 +3,8 @@
 // Ants access bait through small holes in the outer wall into the tray cavity.
 // Outer + inner bait barrier rings; inner ring has holes and vertical rails + filler between them.
 
-include <needle-insert-lib.scad>
+needle_insert_as_library = true;
+include <needle-insert.scad>
 
 // ── Main Assembly ─────────────────────────────────────────────────
 module bait_station() {

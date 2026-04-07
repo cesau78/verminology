@@ -2,7 +2,8 @@
 // Toggle 'locked' to see pin engagement vs disengaged.
 // Toggle 'exploded' to spread parts for inspection.
 
-include <needle-insert-lib.scad>
+needle_insert_as_library = true;
+include <needle-insert.scad>
 use <station.scad>
 use <reservoir.scad>
 use <needle-seal.scad>

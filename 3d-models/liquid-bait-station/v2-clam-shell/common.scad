@@ -175,10 +175,10 @@ needle_insert_clip_retention_radial_inset_mm = 0.1;  // whole post + barb shifte
 needle_insert_pocket_inner_barrier_min_wall_mm = 0.12;  // min radial solid left on inner bait barrier ring (OD side)
 needle_insert_pocket_z_above_clip_post_mm  = 0.12;  // wide pocket stage clears post + barb (wider than pin column)
 
-// Computed pin height (from station z=0) — apex flush with top of needle seal disk (not retention barb)
+// Computed pin height (from station z=0) — apex extends 1 mm above needle seal disk top.
 // Needle insert: base OD = inner barrier center hole ID; coaxial pocket; pin apex at pin_top.
 // Assembly: valve_z = reservoir_seat − valve_flange_h → disk top = reservoir_seat + valve_disk_h
-pin_top          = reservoir_seat + valve_disk_h;
+pin_top          = reservoir_seat + valve_disk_h + 1;
 
 // ── Tab Slide-Lock ────────────────────────────────────────────────
 // Guide tabs on reservoir outer wall slide straight down into vertical slots

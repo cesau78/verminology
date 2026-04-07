@@ -15,7 +15,7 @@
       "stamp": { "face": "bottom" }
     },
     {
-      "scad": "v2-clam-shell/needle-insert-export.scad",
+      "scad": "v2-clam-shell/needle-insert.scad",
       "stl": "latest-builds/{version_folder}/needle-insert.stl",
       "stamp": null
     },
