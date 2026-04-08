@@ -1,5 +1,5 @@
 // V2 Assembly View — All parts in operating position.
-// Toggle 'locked' to see pin engagement vs disengaged.
+// Toggle 'locked' to see seated vs raised.
 // Toggle 'exploded' to spread parts for inspection.
 
 needle_insert_as_library = true;
@@ -25,11 +25,10 @@ batting_id    = batting_id_in * 25.4;
 batting_h     = batting_h_in * 25.4;
 
 // ── Positions ─────────────────────────────────────────────────────
-// Reservoir bottom z-position: drops straight through vertical slot.
-// Locked = dropped + twisted CW onto pin. Unlocked = elevated, pin clear.
+// Reservoir slides straight down; locked = fully seated, unlocked = raised.
 res_z = locked
-    ? reservoir_seat                    // seated: tray_gap_below_reservoir under reservoir bottom
-    : reservoir_seat + tab_drop;        // lifted: elevated, pin clear
+    ? reservoir_seat
+    : reservoir_seat + 15;
 res_z_final = res_z + (exploded ? explode_gap : 0);
 
 // ── Valve position (shared by flange and disk) ──────────────────
@@ -62,6 +61,10 @@ crosssection(station_od * 2) {
     color("SteelBlue", 0.8)
         translate([0, 0, res_z_final])
             reservoir();
+
+    // Debug bolts — positioned in reservoir coordinate space
+    translate([0, 0, res_z_final])
+        debug_bolt();
 
     // Needle seal — flange, disk, and retention ring
     if (show_valve)

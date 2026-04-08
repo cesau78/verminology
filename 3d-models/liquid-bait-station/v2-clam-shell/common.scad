@@ -5,10 +5,8 @@
 // ── Performance Settings ──────────────────────────────────────────
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
 mesh_preview = true;
-// F5 only: draw inner rail disk in red (gray disk is still real geometry when false — see station_inner_barrier_inner_rail_disk_cut).
-inner_barrier_inner_rail_disk_color_preview = false;
-crosssection_view = false;  // cut the model along a plane to inspect internals
-crosssection_axis = "y";   // axis: "x", "y", or "z"
+crosssection_view = true;  // cut the model along a plane to inspect internals
+crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
 $fn = mesh_preview ? 32 : 128;
@@ -53,20 +51,28 @@ valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85 - unit_od_reduction;   // mm — was 85 at reduction 0; keeps rim margin vs reservoir_od
 station_floor  = 3;    // bottom plate thickness (mm)
-// Needle base: bottom segment = central hole ID; upper segment = gasket land OD (must sum to station_floor).
-needle_insert_base_bottom_h      = 1;   // mm — coaxial with inner barrier center hole ID
-needle_insert_base_gasket_step_h = 2;   // mm — upper base step (smaller OD); TPU ring sits here
+// Needle base: threaded bottom segment + upper gasket land; heights must sum to station_floor.
+needle_insert_base_bottom_h      = 2;   // mm — threaded zone, coaxial with inner barrier center hole ID
+needle_insert_base_gasket_step_h = 1;   // mm — upper base step (smaller OD); TPU ring sits here
 needle_insert_disk_h = needle_insert_base_bottom_h + needle_insert_base_gasket_step_h;
 assert(needle_insert_disk_h == station_floor, "needle base segment heights must sum to station_floor");
-needle_insert_pocket_clearance = 0.25;       // radial/press fit vs station pocket
+needle_insert_pocket_clearance = 0.25;       // radial clearance vs station pocket
 needle_insert_pocket_z_extra   = 0.1;        // extend pocket subtractor in +Z (boolean margin)
-needle_insert_retention_clips_enabled = true; // union 6× clips + widen pocket; rails only (no filler behind clips)
+
+// ── Needle insert threaded retention (replaces snap-fit clips) ─────
+// Coarse square thread on the bottom base cylinder; hex socket on the bottom
+// face requires a printed key to install/remove.
+needle_insert_thread_pitch       = 1.5;      // mm per turn
+needle_insert_thread_depth       = 0.4;      // mm radial tooth height
+needle_insert_thread_clearance   = 0.2;      // mm radial clearance between mating threads
+needle_insert_hex_across_flats   = 8;        // mm (wrench size)
+needle_insert_hex_depth          = 1.5;      // mm into insert bottom face
 station_id     = reservoir_od + clearance * 2;  // bore for reservoir
 
 // Vertical gap: top of station floor slab (tray) to bottom of seated reservoir
-tray_gap_below_reservoir = 6;   // mm (~0.236 in)
+tray_gap_below_reservoir = 11;  // mm — sized so M3×20 bolt tip is flush with nut pocket top
 reservoir_seat           = station_floor + tray_gap_below_reservoir;
-station_height   = 18;   // total station height (mm)
+station_height   = 23;   // total station height (mm)
 
 // ── Bait barrier ring (annulus in tray) ────────────────────────────
 // difference( outer_cyl, inner_cyl ) — wall from tray floor up to reservoir bottom.
@@ -84,7 +90,7 @@ inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
 inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
 needle_insert_disk_od_clearance_dia = 0.4;   // diametric mm in relaxed outer-R math vs base hole (larger → smaller gasket OD)
-needle_insert_base_bottom_od = inner_bait_barrier_id;   // bottom 1 mm — matches station central hole ID
+needle_insert_base_bottom_od = inner_bait_barrier_id;   // threaded zone OD — matches station central hole ID
 needle_insert_top_vs_bottom_od_delta_dia = 2;   // upper step OD = bottom OD − this (mm, diameter)
 needle_insert_gasket_land_od = needle_insert_base_bottom_od - needle_insert_top_vs_bottom_od_delta_dia;
 // Legacy name: upper-step OD (gasket land); used by TPU ring math and older includes.
@@ -139,105 +145,21 @@ needle_gasket_assembly_z = needle_insert_base_bottom_h + needle_insert_base_gask
 inner_bait_barrier_hole_count   = 6;
 inner_bait_barrier_hole_dia     = pin_channel_dia;
 inner_bait_barrier_hole_z       = station_floor + inner_bait_barrier_hole_dia / 2;  // lower tangent at z = station_floor
-// Rails (paired strips): angularly between the six wall holes (holes at 0°, 60°, …).
-inner_barrier_rail_phase_deg   = 30;    // deg offset vs hole at i=0 (midway between holes)
-inner_barrier_rail_width_mm   = 1;
-inner_barrier_rail_inward_mm  = 2;
-inner_barrier_rail_y_offset_mm = 2;     // tangential center from axis (±)
-inner_barrier_rail_height_trim_mm = 3; // shorten rails from top (mm); clears inner wall top lip
-inner_barrier_rail_extend_below_floor_mm = 1; // grow downward from tray floor toward needle pocket (mm)
-inner_barrier_rail_z_offset_mm  = 1;   // shift whole rail stack +Z (mm)
-inner_barrier_rail_z_top = bait_barrier_top_z - inner_barrier_rail_height_trim_mm + inner_barrier_rail_z_offset_mm;
-inner_barrier_rail_z_bot = station_floor - inner_barrier_rail_extend_below_floor_mm + inner_barrier_rail_z_offset_mm;
-// Inner barrier: annular disk (station_inner_barrier_inner_rail_disk) extends inward same as rails; slots cut at rail sites for insert slide-in.
-inner_barrier_inner_rail_disk_inward_mm = inner_barrier_rail_inward_mm;
-inner_barrier_inner_rail_disk_slot_clearance_mm = 0.35; // each side of slot vs rail inner faces (tangential)
-// Cut past the ring inner face toward the bore so no shelf shows in the clip slide path.
-inner_barrier_inner_rail_disk_slot_bottom_inward_mm = 0.65;
-// Disk vs nominal bore / rails: tiny overlaps so section view has no seam between wall, disk, and rail cubes (rails stay [id2−rin, id2]).
-inner_barrier_inner_rail_disk_outer_overlap_mm = 0.06; // extend OD past bore ID into wall annulus (mm)
-inner_barrier_inner_rail_disk_inner_overlap_mm = 0.04; // extend inner lip inward into rail volume vs nominal id2−rin (mm); keeps rail inner face flush in union
-// Increase disk inner radius (mm) so the bore-side face lines up with the guide rails in print / section.
-inner_barrier_inner_rail_disk_inner_flush_mm = 0.25;
-inner_barrier_inner_rail_disk_r_outer_mm =
-    inner_bait_barrier_id / 2 + inner_barrier_inner_rail_disk_outer_overlap_mm;
-inner_barrier_inner_rail_disk_r_inner_mm =
-    inner_bait_barrier_id / 2
-    - inner_barrier_inner_rail_disk_inward_mm
-    - inner_barrier_inner_rail_disk_inner_overlap_mm
-    + inner_barrier_inner_rail_disk_inner_flush_mm;
-// Wall holes: start inside bore past disk inner lip; length pierces base wall + full disk + margin.
-inner_bait_barrier_hole_start_r =
-    inner_barrier_inner_rail_disk_r_inner_mm
-    - inner_barrier_inner_rail_disk_slot_bottom_inward_mm
-    - 0.35;
-inner_bait_barrier_hole_length  =
-    inner_bait_barrier_radial_t
-    + inner_barrier_inner_rail_disk_inward_mm
-    + inner_barrier_inner_rail_disk_slot_bottom_inward_mm
-    + inner_barrier_inner_rail_disk_outer_overlap_mm
-    + 0.8;
-
-// Needle insert retention posts — 6×, same phase as inner barrier rails; flex posts + 2 mm top barb (two ramps at slope_deg).
-// Clips sit on the upper base step (gasket land OD), not the lower 1 mm ring — leaves lower ring for TPU gasket.
-// Insertion: align each clip with the vertical slot between the two rails at that site (6-fold symmetry).
-needle_insert_clip_count = inner_bait_barrier_hole_count;
-needle_insert_clip_phase_deg = inner_barrier_rail_phase_deg;
-needle_insert_clip_z0_above_gasket_step_mm = 0.25;   // local Z above top of first cylinder (nominal stem start on upper step)
-needle_insert_clip_stem_bottom_trim_mm     = 0.2;    // raise stem start (+Z): shorter stem for interference; barb top unchanged
-needle_insert_clip_anchor_depth_mm = 0.55;   // root into disk — deeper so stems don’t tear out at the land
-needle_insert_clip_stem_radial_mm    = 2; // flex leg (X toward axis): thicker vs snap-off
-needle_insert_clip_tangent_width_mm  = 2.45; // Y across slot: ~3 mm between rail inner faces − ~0.28 mm/side clearance
-needle_insert_clip_shelf_clear_below_rail_top_mm = 0.12;  // post top vs rail top (station Z)
-needle_insert_clip_body_z_top = inner_barrier_rail_z_top - needle_insert_clip_shelf_clear_below_rail_top_mm;
-// Top barb: +2 mm above flat post top — two 1 mm legs; outer faces vs horizontal = slope_deg (60° steeper than 45° → smaller apex).
-needle_insert_clip_top_barb_seg_h_mm    = 1;   // vertical per leg (half of total barb height)
-needle_insert_clip_top_barb_slope_deg   = 60;  // ramp angle from horizontal; apex radial = seg_h / tan(slope)
-needle_insert_clip_top_barb_h_mm        = 2 * needle_insert_clip_top_barb_seg_h_mm;
-needle_insert_clip_top_barb_drop_mm     = 0.2;  // barb base −Z vs nominal stem top (stem shortened to meet barb)
-needle_insert_clip_top_barb_apex_radial_mm = needle_insert_clip_top_barb_seg_h_mm / tan(needle_insert_clip_top_barb_slope_deg);
-needle_insert_clip_retention_radial_inset_mm = 0.1;  // whole post + barb shifted toward axis; peak radius = land_r + apex − inset
-// Pocket radius must stay inside inner barrier ring OD or the subtract wipes the wall — see needle_insert_pocket().
-needle_insert_pocket_inner_barrier_min_wall_mm = 0.12;  // min radial solid left on inner bait barrier ring (OD side)
-needle_insert_pocket_z_above_clip_post_mm  = 0.12;  // wide pocket stage clears post + barb (wider than pin column)
-
-// Inner barrier flex tab (between rails): foot on tray floor; outer face vertical; inner side V catches barb.
-inner_barrier_retention_tab_gap_clearance_mm = 0.2;   // each side of tab vs rail inner faces
-inner_barrier_retention_tab_radial_thickness_mm = 0.75; // body wall (id2 side) before V protrusion
-inner_barrier_retention_tab_floor_foot_h_mm = 0.55;    // Z height of floor anchor bridging the rail gap
-inner_barrier_retention_tab_v_depth_mm = 0.45;         // V tip radial depth inward (-X) toward needle
-inner_barrier_retention_tab_v_half_angle_deg = 28;       // half-angle of V opening (faces insert)
-inner_barrier_retention_tab_socket_clearance_mm = 0.1;  // extra at barb apex catch
+inner_bait_barrier_hole_start_r = inner_bait_barrier_id / 2 - 0.5;   // start slightly inside bore
+inner_bait_barrier_hole_length  = inner_bait_barrier_radial_t + 1.0;  // through wall + margin
 
 // Computed pin height (from station z=0) — apex extends 1 mm above needle seal disk top.
 // Needle insert: base OD = inner barrier center hole ID; coaxial pocket; pin apex at pin_top.
 // Assembly: valve_z = reservoir_seat − valve_flange_h → disk top = reservoir_seat + valve_disk_h
 pin_top          = reservoir_seat + valve_disk_h + 1;
 
-// ── Tab Slide-Lock ────────────────────────────────────────────────
-// Guide tabs on reservoir outer wall slide straight down into vertical slots
-// in the station bore. No twist — reservoir drops in and seats on tabs.
-tab_count    = 3;    // number of tabs, evenly spaced
-tab_w        = 3;    // tab circumferential width (mm)
-tab_h        = 2;    // tab height (mm)
-tab_d        = 1.5;  // tab radial protrusion from reservoir wall (mm)
-tab_drop     = 5;    // mm the reservoir drops through slot (pin engagement travel)
-tab_z        = 2;    // tab bottom position from reservoir bottom (mm)
-
-// Computed tab z-positions in station coordinates
-tab_z_locked   = reservoir_seat + tab_z;                // seated
-tab_z_unlocked = reservoir_seat + tab_drop + tab_z;     // elevated, pin clear
-
-// Outward bottom barbs (reservoir) + station channel / catch; angles = vertical wall land (between guide tabs).
-bottom_barb_w_mm    = 3.85;  // tangential width — inside land between 0.2 mm gaps (mm)
-bottom_barb_h_mm    = 2.4;   // vertical span on outer wall from reservoir z = bottom_barb_z0_mm (mm)
-bottom_barb_d_mm    = 1.1;   // radial protrusion past land outer face (incl. rib) (mm)
-bottom_barb_root_mm = 1.35;  // depth merged into shell (mm) — sturdy root
-// Barb sits on lowest outer wall: base of OD sleeve (z < 0 when extension > 0).
-bottom_barb_z0_mm   = -reservoir_outer_wall_extension_below_mm;
-// Station: 1 mm-deep sliding channel on bore ID; rectangular hole through wall at seated barb (collapsed).
-bottom_barb_channel_depth_mm  = 1;    // radial depth of vertical track from bore inner surface (mm)
-bottom_barb_catch_z_margin_mm = 0.25; // extra Z on catch opening vs barb height (mm, each end)
+// ── Guide Tabs (reservoir slides straight into station bore) ──────
+// Three tabs on the reservoir outer wall drop into three vertical slots
+// in the station bore.  No twist — reservoir drops straight in.
+tab_count     = 2;     // one on each side (180° apart)
+tab_w         = 3;     // tangential width (mm)
+tab_d         = 1.5;   // radial protrusion beyond reservoir OD (mm)
+tab_clearance = 0.2;   // per-side clearance in slot (mm)
 
 // ── Guard Holes (ant access through outer wall into tray) ───────────
 guard_hole_dia   = 3.2;  // hole diameter — ants only
@@ -260,10 +182,17 @@ skirt_id       = reservoir_id;                                  // 73mm — over
 skirt_z_start  = station_height - reservoir_seat;               // 9.8mm from reservoir bottom
 skirt_height   = reservoir_height - skirt_z_start;              // 20.2mm — up to reservoir top
 
-// Vertical feature in main OD wall (between guide tabs): land tangential width + 0.2 mm kerfs each side; rib extends land +Z outward.
-reservoir_vertical_slot_land_mm              = 4;    // tangential width of solid wall between cuts (mm)
-reservoir_vertical_slot_gap_mm               = 0.2;  // tangential gap cut on each side of the land (mm)
-reservoir_vertical_land_radial_extension_mm  = 1;    // cube added past nominal OD on the land only (mm)
+// ── Bolt Lock (M3 cap head + captive nut; prevents reservoir removal) ─
+// Two captive-nut pockets on the reservoir underside at 90° and 270°
+// (halfway between the two guide tabs).  Vertical M3x20 cap-head bolts
+// come up through the station floor and thread into the captive nuts.
+bolt_lock_count       = 2;     // pockets, 180° apart
+bolt_lock_angle       = 90;    // first pocket angle (degrees); next at +180°
+bolt_lock_r           = 29;    // hex pocket center radius from axis (mm)
+bolt_lock_screw_dia   = 3.2;   // clearance hole — 1/8″, file-friendly (mm)
+bolt_lock_head_dia    = 6.0;   // M3 cap-head OD + clearance (mm)
+bolt_lock_nut_af      = 5.8;   // hex nut pocket across-flats + clearance (mm)
+bolt_lock_nut_h       = 2.6;   // nut pocket height (Z) with clearance (mm)
 
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
 strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned
@@ -294,11 +223,11 @@ res_bottom_mark_gap_2_3 =
     res_bottom_mark_size_secondary * 1.25;
 res_bottom_mark_gap_extra_brand_to_product = 2.5; // extra mm between line 1 and line 2 vs 2–3
 res_bottom_mark_gap_1_2 = res_bottom_mark_gap_2_3 + res_bottom_mark_gap_extra_brand_to_product;
-// Rule under line 1: thickness tracks brand size (≈ bold “Y” stem); length from left edge of word to near final “y” tail.
+// Rule under line 1: thickness tracks brand size (≈ bold "Y" stem); length from left edge of word to near final "y" tail.
 // OpenSCAD 2021 has no textmetrics — advance is estimated from len × size × factor (tune for font/string).
 res_bottom_mark_rule_adv_per_char   = 0.78;   // × line1 size → total width scale (Liberation Sans Bold)
 res_bottom_mark_rule_stroke_scale   = 0.132;  // rule thickness = line1 size × this (match stem weight)
-res_bottom_mark_rule_right_inset    = 0.40;   // × (adv/n_chars): shorten from right to meet “y” descender
+res_bottom_mark_rule_right_inset    = 0.40;   // × (adv/n_chars): shorten from right to meet "y" descender
 // Shift whole stamp along +Y: fraction × part_od = distance from disc center toward rim (0.25 → mid-radius).
 res_bottom_mark_radial_shift_fraction = 0.25;
 res_bottom_mark_font     = "Liberation Sans:style=Bold";
@@ -316,7 +245,6 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     stamp_shift_y = part_od * res_bottom_mark_radial_shift_fraction;
     has_any = info_stamp_line1 != "" || info_stamp_line2 != "" || info_stamp_line3 != "";
     if (enable && has_any) {
-        // Text is authored in +Z-down convention; exterior bottom is read from below (−Z) → mirror X.
         translate([0, stamp_shift_y, -0.01])
             mirror([1, 0, 0]) {
                 if (info_stamp_line1 != "")
@@ -392,6 +320,30 @@ module arc_shell(r_outer, r_inner, h, ang) {
         rotate_extrude(angle = ang)
             translate([r_inner, 0])
                 square([r_outer - r_inner, h]);
+}
+
+// ── Thread Helix (shared by needle insert + station pocket) ───────
+// 2D cross-section for a single-start square thread: polygon with one
+// radial bump spanning half the circumference.  linear_extrude with
+// twist traces the bump into a right-hand helix.
+module thread_helix_2d(r_minor, depth) {
+    r_major = r_minor + depth;
+    n = max(64, $fn * 2);
+    polygon([for (i = [0 : n - 1])
+        let (a = i * 360 / n,
+             in_tooth = (a <= 90 || a >= 270),
+             r = in_tooth ? r_major : r_minor)
+        [r * cos(a), r * sin(a)]
+    ]);
+}
+
+module thread_helix(r_minor, depth, pitch, height) {
+    n_turns = height / pitch;
+    segs = max(32, ceil(n_turns * (mesh_preview ? 32 : 96)));
+    render_if_needed()
+        linear_extrude(height = height, twist = -360 * n_turns,
+                       slices = segs, convexity = 6)
+            thread_helix_2d(r_minor, depth);
 }
 
 module crosssection(extent) {

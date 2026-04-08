@@ -1,6 +1,7 @@
 // Needle insert + gasket ring modules. Include this (not `use`) so common.scad loads.
 // F5 / STL: open this file directly — draws needle_insert() unless needle_insert_as_library is true before include.
-// Base: union of two cylinders — bottom 1 mm @ inner_bait_barrier_id, upper 2 mm @ bottom OD − 2 mm (diametric).
+// Base: threaded bottom cylinder (2 mm) + smooth gasket land (1 mm).
+// Hex socket on the bottom face requires a printed key to install/remove.
 
 include <common.scad>
 
@@ -19,56 +20,32 @@ module needle_gasket_ring() {
             ]);
 }
 
-// Six flex posts on upper base step (gasket land OD); top barb: two ramps at needle_insert_clip_top_barb_slope_deg, extruded across w.
-module needle_insert_retention_clip_top_barb(L, w, h_barb, apex_r) {
-    hm = h_barb / 2;
-    translate([0, w / 2, 0])
-        rotate([90, 0, 0])
-            linear_extrude(height = w, convexity = 4)
-                polygon([
-                    [0, 0],
-                    [L, 0],
-                    [L + apex_r, hm],
-                    [L, h_barb],
-                    [0, h_barb],
-                ]);
-}
-
-module needle_insert_retention_clips() {
-    R = needle_insert_gasket_land_od / 2;
-    w = needle_insert_clip_tangent_width_mm;
-    ad = needle_insert_clip_anchor_depth_mm;
-    stem = needle_insert_clip_stem_radial_mm;
-    L = ad + stem;
-    h_barb = needle_insert_clip_top_barb_h_mm;
-    apex_r = needle_insert_clip_top_barb_apex_radial_mm;
-    z_step = needle_insert_base_bottom_h;
-    z0 = needle_insert_clip_z0_above_gasket_step_mm + needle_insert_clip_stem_bottom_trim_mm;
-    z_body_top = needle_insert_clip_body_z_top - z_step;
-    z_barb_base = z_body_top - needle_insert_clip_top_barb_drop_mm;
-    ri = needle_insert_clip_retention_radial_inset_mm;
-    assert(z_barb_base > z0 + 0.05, "barb drop too large vs stem height");
-    for (i = [0 : needle_insert_clip_count - 1])
-        rotate([0, 0, needle_insert_clip_phase_deg + i * (360 / needle_insert_clip_count)])
-            render_if_needed()
-                translate([0, 0, z_step])
-                    union() {
-                        translate([R - L - ri, -w / 2, z0])
-                            cube([L, w, z_barb_base - z0]);
-                        translate([R - L - ri, 0, z_barb_base])
-                            needle_insert_retention_clip_top_barb(L, w, h_barb, apex_r);
-                    }
-}
-
-// Lower base step — plain cylinder only (no groove, no difference).
+// Lower base step — thread root cylinder (thread teeth added separately).
 module needle_insert_base_bottom_cylinder() {
-    cylinder(h = needle_insert_base_bottom_h, d = needle_insert_base_bottom_od);
+    r_minor = needle_insert_base_bottom_od / 2 - needle_insert_thread_depth;
+    cylinder(h = needle_insert_base_bottom_h, d = 2 * r_minor);
+}
+
+// External thread on the bottom base cylinder.
+module needle_insert_external_thread() {
+    r_minor = needle_insert_base_bottom_od / 2 - needle_insert_thread_depth;
+    thread_helix(r_minor, needle_insert_thread_depth,
+                 needle_insert_thread_pitch, needle_insert_base_bottom_h);
 }
 
 // Upper base step — second cylinder only (stacked on bottom).
 module needle_insert_base_upper_cylinder() {
     translate([0, 0, needle_insert_base_bottom_h])
         cylinder(h = needle_insert_base_gasket_step_h, d = needle_insert_gasket_land_od);
+}
+
+// Hex socket subtracted from the bottom face (z=0).
+module needle_insert_hex_socket() {
+    af = needle_insert_hex_across_flats;
+    dp = needle_insert_hex_depth;
+    translate([0, 0, -0.01])
+        linear_extrude(height = dp + 0.01)
+            circle(d = af / cos(30), $fn = 6);
 }
 
 module needle_insert_channels() {
@@ -82,51 +59,56 @@ module needle_insert_channels() {
             cylinder(h = pin_tunnel_reach, d = pin_channel_dia, center = true);
 }
 
-// Solid: union(two base cylinders, pin…); channels subtract through the stack.
+// Solid: union(threaded base, gasket land, pin); channels + hex socket subtracted.
 module needle_insert() {
     sh = pin_top - pin_tip_taper_h - needle_insert_disk_h;
     render_if_needed()
         difference() {
             union() {
                 needle_insert_base_bottom_cylinder();
+                needle_insert_external_thread();
                 needle_insert_base_upper_cylinder();
                 translate([0, 0, needle_insert_disk_h]) {
                     cylinder(h = sh, d = pin_dia);
                     translate([0, 0, sh])
                         cylinder(h = pin_tip_taper_h, d1 = pin_dia, d2 = pin_tip_od);
                 }
-                if (needle_insert_retention_clips_enabled)
-                    needle_insert_retention_clips();
             }
             needle_insert_channels();
+            needle_insert_hex_socket();
         }
 }
 
-// Pocket: max of (bottom OD, land + barb) + clearance — not id2+c+apex as extra (that oversize erased inner barrier ring).
-// Capped below inner barrier ring OD so the subtract cannot hollow the full annulus (watertight wall).
-// Inner rail disk is unioned after this pocket in bait_station() (like guide rails); otherwise this cylinder would erase it.
+// Pocket subtracted from station floor: threaded bore + smooth gasket bore + pin bore.
+// The threaded bore uses the same helix profile shifted outward by thread clearance;
+// subtracting it from the station body creates matching internal threads.
 module needle_insert_pocket() {
     c = needle_insert_pocket_clearance;
     ze = needle_insert_pocket_z_extra;
-    r_body = needle_insert_base_bottom_od / 2 + c;
-    r_barb = needle_insert_retention_clips_enabled
-        ? needle_insert_gasket_land_od / 2 + needle_insert_clip_top_barb_apex_radial_mm + c
-            - needle_insert_clip_retention_radial_inset_mm
-        : 0;
-    r_need = max(r_body, r_barb);
-    r_cap = inner_bait_barrier_od / 2 - needle_insert_pocket_inner_barrier_min_wall_mm;
-    r_clip = min(r_need, r_cap);
-    assert(r_need <= r_cap + 0.02, "needle pocket exceeds inner barrier OD cap — reduce barb apex or slope");
-    z_barb = needle_insert_retention_clips_enabled ? needle_insert_clip_top_barb_h_mm : 0;
-    z_drop = needle_insert_retention_clips_enabled ? needle_insert_clip_top_barb_drop_mm : 0;
-    z_clip_top = max(
-        inner_barrier_rail_z_top + 0.08,
-        needle_insert_clip_body_z_top - z_drop + z_barb + needle_insert_pocket_z_above_clip_post_mm);
+    tc = needle_insert_thread_clearance;
+    r_minor_ext = needle_insert_base_bottom_od / 2 - needle_insert_thread_depth;
+    depth = needle_insert_thread_depth;
+    pitch = needle_insert_thread_pitch;
+    h_thread = needle_insert_base_bottom_h;
+    n_turns = h_thread / pitch;
+    segs = max(32, ceil(n_turns * (mesh_preview ? 32 : 96)));
+
     translate([0, 0, -0.02])
         union() {
-            cylinder(h = z_clip_top + 0.02 + ze, r = r_clip);
-            translate([0, 0, z_clip_top])
-                cylinder(h = pin_top - z_clip_top + 0.5 + ze, d = pin_dia + 2 * c);
+            // Threaded bore (z=0 to base_bottom_h): internal thread via subtraction
+            render_if_needed()
+                linear_extrude(height = h_thread + 0.02,
+                               twist = -360 * n_turns,
+                               slices = segs, convexity = 6)
+                    thread_helix_2d(r_minor_ext + tc, depth);
+            // Smooth bore for gasket land (base_bottom_h to station_floor)
+            translate([0, 0, h_thread])
+                cylinder(h = needle_insert_base_gasket_step_h + 0.02 + ze,
+                         d = needle_insert_base_bottom_od + 2 * c);
+            // Pin clearance bore (station_floor upward)
+            translate([0, 0, needle_insert_disk_h])
+                cylinder(h = pin_top - needle_insert_disk_h + 0.5 + ze,
+                         d = pin_dia + 2 * c);
         }
 }
 
