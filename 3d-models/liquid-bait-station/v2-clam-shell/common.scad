@@ -5,7 +5,7 @@
 // ── Performance Settings ──────────────────────────────────────────
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
 mesh_preview = true;
-crosssection_view = true;  // cut the model along a plane to inspect internals
+crosssection_view = false;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -51,22 +51,6 @@ valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
 // ── Station ───────────────────────────────────────────────────────
 station_od     = 85 - unit_od_reduction;   // mm — was 85 at reduction 0; keeps rim margin vs reservoir_od
 station_floor  = 3;    // bottom plate thickness (mm)
-// Needle base: threaded bottom segment + upper gasket land; heights must sum to station_floor.
-needle_insert_base_bottom_h      = 2;   // mm — threaded zone, coaxial with inner barrier center hole ID
-needle_insert_base_gasket_step_h = 1;   // mm — upper base step (smaller OD); TPU ring sits here
-needle_insert_disk_h = needle_insert_base_bottom_h + needle_insert_base_gasket_step_h;
-assert(needle_insert_disk_h == station_floor, "needle base segment heights must sum to station_floor");
-needle_insert_pocket_clearance = 0.25;       // radial clearance vs station pocket
-needle_insert_pocket_z_extra   = 0.1;        // extend pocket subtractor in +Z (boolean margin)
-
-// ── Needle insert threaded retention (replaces snap-fit clips) ─────
-// Coarse square thread on the bottom base cylinder; hex socket on the bottom
-// face requires a printed key to install/remove.
-needle_insert_thread_pitch       = 1.5;      // mm per turn
-needle_insert_thread_depth       = 0.4;      // mm radial tooth height
-needle_insert_thread_clearance   = 0.2;      // mm radial clearance between mating threads
-needle_insert_hex_across_flats   = 8;        // mm (wrench size)
-needle_insert_hex_depth          = 1.5;      // mm into insert bottom face
 station_id     = reservoir_od + clearance * 2;  // bore for reservoir
 
 // Vertical gap: top of station floor slab (tray) to bottom of seated reservoir
@@ -89,12 +73,6 @@ inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
 inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
-needle_insert_disk_od_clearance_dia = 0.4;   // diametric mm in relaxed outer-R math vs base hole (larger → smaller gasket OD)
-needle_insert_base_bottom_od = inner_bait_barrier_id;   // threaded zone OD — matches station central hole ID
-needle_insert_top_vs_bottom_od_delta_dia = 2;   // upper step OD = bottom OD − this (mm, diameter)
-needle_insert_gasket_land_od = needle_insert_base_bottom_od - needle_insert_top_vs_bottom_od_delta_dia;
-// Legacy name: upper-step OD (gasket land); used by TPU ring math and older includes.
-needle_insert_disk_od        = needle_insert_gasket_land_od;
 
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;
@@ -112,8 +90,8 @@ pin_tip_taper_h = 3;   // mm — length of outer taper from full pin_dia
 pin_tip_od      = pin_channel_dia + 0.6;   // mm at apex (~0.3 mm wall each side for FDM)
 // Lateral bore Z: prefer top tangent at seal flange; cap keeps tunnel from slicing down through base top (z = disk_h).
 pin_tunnel_z_seal_align = reservoir_seat - valve_flange_h - pin_channel_dia / 2;
-// Center height so bottom tangent ≈ disk top — lateral sits mostly in pin shank, not through upper base slab.
-pin_tunnel_z_max_center = needle_insert_disk_h + pin_channel_dia / 2;
+// Center height so bottom tangent ≈ station floor top — lateral sits in pin shank, not through floor.
+pin_tunnel_z_max_center = station_floor + pin_channel_dia / 2;
 pin_tunnel_z            = min(pin_tunnel_z_seal_align, pin_tunnel_z_max_center);
 // Lateral bore: start past far side of pin OD; end inside inner bait barrier *center hole* ID (not outer bait ring).
 pin_tunnel_face_inset    = 0.25;   // mm past outer pin surface (clean boolean)
@@ -124,22 +102,6 @@ pin_tunnel_reach         = pin_tunnel_x_end - pin_tunnel_x_start;
 pin_tunnel_x_center      = (pin_tunnel_x_start + pin_tunnel_x_end) / 2;
 // Axial channel: lowest z = bottom tangent of lateral (no bore below that through insert bed).
 pin_channel_z_bottom     = pin_tunnel_z - pin_channel_dia / 2;
-
-// ── Needle base TPU ring (90A) — no groove on insert; torus stretches over upper step OD ──
-needle_gasket_radial_inner_undersize_mm = 0.12;  // baseline: relaxed inner R < upper step R (mm)
-needle_gasket_radial_outer_oversize_mm  = 0.28; // used only to define held OD below (mm)
-needle_gasket_axial_clear_mm            = 0.06; // torus z half-height slack vs upper step (mm, each end)
-// Relaxed inner opening ID reduced by this (diametric mm) vs land_R − undersize → radial wall thicker by ~half this.
-needle_gasket_ring_inner_id_reduction_dia_mm = 0.5;   // diametric shrink of relaxed inner vs land − undersize
-// Relaxed outer R: reference hole ID − small offset + oversize (independent of upper-step OD).
-needle_gasket_relaxed_outer_r =
-    (needle_insert_base_bottom_od - needle_insert_disk_od_clearance_dia) / 2 + needle_gasket_radial_outer_oversize_mm;
-needle_gasket_relaxed_inner_r =
-    needle_insert_gasket_land_od / 2
-    - needle_gasket_radial_inner_undersize_mm
-    - needle_gasket_ring_inner_id_reduction_dia_mm / 2;
-needle_gasket_relaxed_z_half = needle_insert_base_gasket_step_h / 2 - needle_gasket_axial_clear_mm;
-needle_gasket_assembly_z = needle_insert_base_bottom_h + needle_insert_base_gasket_step_h / 2;
 
 // Inner barrier — radial ports (same dia as needle / pin channel), flush with tray floor top
 inner_bait_barrier_hole_count   = 6;
@@ -245,6 +207,7 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     stamp_shift_y = part_od * res_bottom_mark_radial_shift_fraction;
     has_any = info_stamp_line1 != "" || info_stamp_line2 != "" || info_stamp_line3 != "";
     if (enable && has_any) {
+        rotate([0, 0, 90])
         translate([0, stamp_shift_y, -0.01])
             mirror([1, 0, 0]) {
                 if (info_stamp_line1 != "")

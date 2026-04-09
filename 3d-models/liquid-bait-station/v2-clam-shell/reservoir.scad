@@ -202,40 +202,5 @@ module reservoir_top_fillet() {
             edge_round(skirt_od, fillet_r);
 }
 
-// ── Debug: M3×20 cap-head bolt + nut visualisation ───────────────
-module debug_bolt() {
-    cap_h   = 3;       // M3 cap head height
-    cap_d   = 5.5;     // M3 cap head OD
-    shaft_d = 3;       // M3 nominal shaft
-    shaft_l = 20;      // bolt length (shaft only)
-    nut_af  = 5.5;     // M3 nut across-flats (nominal)
-    nut_h   = 2.4;     // M3 nut height (nominal)
-
-    nut_z = skirt_z_start - bolt_lock_nut_h;
-
-    bolt_bottom_z = -reservoir_seat;
-
-    for (i = [0 : bolt_lock_count - 1]) {
-        angle = bolt_lock_angle + i * (360 / bolt_lock_count);
-        rotate([0, 0, angle])
-            translate([bolt_lock_r, 0, 0]) {
-                // Cap head
-                color("FireBrick", 0.6)
-                    translate([0, 0, bolt_bottom_z])
-                        cylinder(h = cap_h, d = cap_d);
-                // Shaft
-                color("Silver", 0.6)
-                    translate([0, 0, bolt_bottom_z + cap_h])
-                        cylinder(h = shaft_l, d = shaft_d);
-                // Nut
-                color("Gold", 0.8)
-                    translate([0, 0, nut_z])
-                        rotate([0, 0, 30])
-                            cylinder(h = nut_h, d = nut_af / cos(30), $fn = 6);
-            }
-    }
-}
-
 // ── Render ────────────────────────────────────────────────────────
 crosssection(skirt_od) reservoir();
-debug_bolt();

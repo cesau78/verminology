@@ -2,10 +2,9 @@
 // The reservoir drops straight into the bore (guide tabs into vertical
 // slots).  Vertical M3 bolts through the station floor clamp the
 // reservoir via captive nuts.  Outer + inner bait barrier rings; needle
-// insert screws into a threaded pocket in the station floor (hex key).
+// pin is integrated directly into the station floor.
 
-needle_insert_as_library = true;
-include <needle-insert.scad>
+include <common.scad>
 
 // ── Helper: test whether an angle matches a bolt-lock position ────
 function _is_bolt_lock_pos(a, tol = 1) =
@@ -26,8 +25,9 @@ module bait_station() {
             station_bait_barrier_ring();
             station_inner_bait_barrier_ring();
             station_bolt_lock_bosses();
+            station_needle();
         }
-        needle_insert_pocket();
+        station_needle_channels();
         station_bolt_lock();
         station_side_scallops();
         part_bottom_info_stamp_deboss(station_stamp_bottom, station_od);
@@ -53,8 +53,8 @@ module station_tab_slots() {
     sd = tab_d + tab_clearance;
     for (i = [0 : tab_count - 1])
         rotate([0, 0, i * (360 / tab_count)])
-            translate([station_id / 2 - 0.01, -sw / 2, station_floor])
-                cube([sd + 0.02, sw, station_height - station_floor + 0.01]);
+            translate([station_id / 2 - 1, -sw / 2, station_floor])
+                cube([sd + 1.01, sw, station_height - station_floor + 0.01]);
 }
 
 // ── Bait Barrier Ring (outer) ────────────────────────────────────
@@ -78,9 +78,29 @@ module station_inner_bait_barrier_ring() {
                     translate([0, 0, -0.01])
                         cylinder(h = bait_barrier_h + 0.02, d = inner_bait_barrier_id);
                 }
-            needle_insert_channels();
+            station_needle_channels();
             station_inner_barrier_wall_holes();
         }
+}
+
+// ── Integrated Needle Pin ────────────────────────────────────────
+module station_needle() {
+    sh = pin_top - pin_tip_taper_h - station_floor;
+    translate([0, 0, station_floor]) {
+        cylinder(h = sh, d = pin_dia);
+        translate([0, 0, sh])
+            cylinder(h = pin_tip_taper_h, d1 = pin_dia, d2 = pin_tip_od);
+    }
+}
+
+module station_needle_channels() {
+    vb = max(0, pin_channel_z_bottom);
+    vh = pin_top + 0.5 - vb;
+    translate([0, 0, vb])
+        cylinder(h = vh, d = pin_channel_dia);
+    translate([pin_tunnel_x_center, 0, pin_tunnel_z])
+        rotate([0, 90, 0])
+            cylinder(h = pin_tunnel_reach, d = pin_channel_dia, center = true);
 }
 
 module station_inner_barrier_wall_holes() {

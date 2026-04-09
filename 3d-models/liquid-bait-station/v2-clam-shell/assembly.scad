@@ -2,17 +2,15 @@
 // Toggle 'locked' to see seated vs raised.
 // Toggle 'exploded' to spread parts for inspection.
 
-needle_insert_as_library = true;
-include <needle-insert.scad>
 use <station.scad>
 use <reservoir.scad>
 use <needle-seal.scad>
+include <common.scad>
 
 // ── Settings ──────────────────────────────────────────────────────
 exploded   = false;  // spread parts vertically for inspection
 explode_gap = 25;    // mm gap in exploded view
 show_valve  = true;   // show the TPU needle seal (reservoir floor)
-show_needle_gasket = true;   // TPU torus on upper base step (assembly preview)
 show_batting = true;  // show bait ring in tray (assembly preview only)
 locked     = true;   // true = locked (pin engaged), false = unlocked (resting)
 
@@ -36,16 +34,9 @@ valve_z = res_z_final - valve_flange_h - (exploded ? explode_gap / 2 : 0);
 
 // ── Assembly ──────────────────────────────────────────────────────
 crosssection(station_od * 2) {
-    // Station shell (pocket for needle); rigid needle insert at origin
+    // Station shell with integrated needle pin
     color("SlateGray", 0.8)
         bait_station();
-    color("DimGray", 0.95)
-        needle_insert();
-
-    if (show_needle_gasket)
-        color("MediumSeaGreen", 0.85)
-            translate([0, 0, needle_gasket_assembly_z])
-                needle_gasket_ring();
 
     // Bait ring on tray floor (visualization)
     if (show_batting)
@@ -61,10 +52,6 @@ crosssection(station_od * 2) {
     color("SteelBlue", 0.8)
         translate([0, 0, res_z_final])
             reservoir();
-
-    // Debug bolts — positioned in reservoir coordinate space
-    translate([0, 0, res_z_final])
-        debug_bolt();
 
     // Needle seal — flange, disk, and retention ring
     if (show_valve)
