@@ -15,16 +15,6 @@
       "stamp": { "face": "bottom" }
     },
     {
-      "scad": "v2-clam-shell/needle-insert.scad",
-      "stl": "latest-builds/{version_folder}/needle-insert.stl",
-      "stamp": null
-    },
-    {
-      "scad": "v2-clam-shell/needle-gasket-export.scad",
-      "stl": "latest-builds/{version_folder}/needle-gasket.stl",
-      "stamp": null
-    },
-    {
       "scad": "v2-clam-shell/needle-seal.scad",
       "stl": "latest-builds/{version_folder}/needle-seal.stl",
       "stamp": null
