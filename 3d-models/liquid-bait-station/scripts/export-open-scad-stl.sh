@@ -3,7 +3,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG="$MODEL_DIR/print-stamp-config.json"
+CONFIG="$MODEL_DIR/build-config.json"
 
 escape_scad() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -61,7 +61,7 @@ if ! command -v openscad >/dev/null 2>&1; then
   exit 1
 fi
 
-EXPORT_DEFS=(-D "mesh_preview=false" -D "crosssection_view=false")
+EXPORT_DEFS=(-D "draft_mesh=false" -D "crosssection_view=false")
 
 while IFS= read -r row; do
   scad="$(echo "$row" | jq -r '.scad')"

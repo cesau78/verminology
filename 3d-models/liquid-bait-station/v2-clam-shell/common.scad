@@ -3,13 +3,13 @@
 // Central push-pin engages the TPU needle seal in the reservoir floor.
 
 // ── Performance Settings ──────────────────────────────────────────
-// mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
-mesh_preview = true;
+// draft_mesh: low $fn for fast interactive editing; export scripts override with draft_mesh=false for final STLs.
+draft_mesh = true;
 crosssection_view = false;  // cut the model along a plane to inspect internals
 crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
-$fn = mesh_preview ? 32 : 128;
+$fn = draft_mesh ? 32 : 128;
 
 // ── General ───────────────────────────────────────────────────────
 wall      = 2;     // shell wall thickness (mm)
@@ -256,7 +256,7 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
 // ── Utility Modules ───────────────────────────────────────────────
 
 module render_if_needed() {
-    if (!mesh_preview) render() children();
+    if (!draft_mesh) render() children();
     else children();
 }
 
@@ -302,7 +302,7 @@ module thread_helix_2d(r_minor, depth) {
 
 module thread_helix(r_minor, depth, pitch, height) {
     n_turns = height / pitch;
-    segs = max(32, ceil(n_turns * (mesh_preview ? 32 : 96)));
+    segs = max(32, ceil(n_turns * (draft_mesh ? 32 : 96)));
     render_if_needed()
         linear_extrude(height = height, twist = -360 * n_turns,
                        slices = segs, convexity = 6)
