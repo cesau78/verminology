@@ -6,7 +6,7 @@
 // mesh_preview: fast low-$fn for interactive editing (export scripts pass mesh_preview=false for STLs).
 mesh_preview = true;
 crosssection_view = false;  // cut the model along a plane to inspect internals
-crosssection_axis = "x";   // axis: "x", "y", or "z"
+crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
 $fn = mesh_preview ? 32 : 128;
@@ -42,7 +42,6 @@ reservoir_outer_wall_extension_below_mm = 3;
 valve_disk_od  = 16;                        // disk outer diameter (mm)
 valve_bore_id  = valve_disk_od;             // snug sliding fit — FDM shrinkage holds it
 valve_disk_h   = wall;                      // same as floor thickness — flush inside
-valve_flange_od = valve_disk_od + 4;        // flange: 2mm larger radius — stop collar
 valve_flange_h  = 2;                        // flange height (mm) — prevents push-through
 valve_retainer_od = valve_disk_od + 1;       // top retention disk OD — just past bore edge
 valve_retainer_id = valve_disk_od - 4;       // top retention disk ID — 2mm lip inward
@@ -73,6 +72,7 @@ inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
 inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
+valve_flange_od = inner_bait_barrier_id;     // flange OD matches inner barrier ID — snug nest fit
 
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;
@@ -178,8 +178,8 @@ fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
 
 // ── Info stamp (bottom / bed face) ────────────────────────────────
 // Lines and per-part flags: ../stamp_generated.scad (product-level; export script writes it).
-res_bottom_mark_size            = 5;    // line 1 (brand)
-res_bottom_mark_size_secondary  = 3;    // lines 2–3 (product, version)
+res_bottom_mark_size            = 6;    // line 1 (brand)
+res_bottom_mark_size_secondary  = 4;    // lines 2–3 (product, version)
 // Center-to-center spacing: lines 2–3 tight; lines 1–2 wider (rule sits halfway in that band).
 res_bottom_mark_gap_2_3 =
     res_bottom_mark_size_secondary * 1.25;
@@ -191,7 +191,7 @@ res_bottom_mark_rule_adv_per_char   = 0.78;   // × line1 size → total width s
 res_bottom_mark_rule_stroke_scale   = 0.132;  // rule thickness = line1 size × this (match stem weight)
 res_bottom_mark_rule_right_inset    = 0.40;   // × (adv/n_chars): shorten from right to meet "y" descender
 // Shift whole stamp along +Y: fraction × part_od = distance from disc center toward rim (0.25 → mid-radius).
-res_bottom_mark_radial_shift_fraction = 0.25;
+res_bottom_mark_radial_shift_fraction = 0;
 res_bottom_mark_font     = "Liberation Sans:style=Bold";
 
 include <../stamp_generated.scad>

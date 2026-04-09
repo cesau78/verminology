@@ -131,12 +131,11 @@ module reservoir_ant_tunnel_cutouts() {
 // outer wall and floor so there is enough material around the hex
 // pocket to hold the nut securely.
 module reservoir_bolt_lock_bosses() {
-    ext     = reservoir_outer_wall_extension_below_mm;
     nut_ac  = bolt_lock_nut_af / cos(30);
     r_inner = bolt_lock_r - nut_ac / 2 - 1.5;
     boss_w  = nut_ac + 3;
-    z_bot   = -ext;
-    h       = ext + skirt_z_start;
+    z_bot   = 0;
+    h       = skirt_z_start;
 
     for (i = [0 : bolt_lock_count - 1]) {
         angle = bolt_lock_angle + i * (360 / bolt_lock_count);

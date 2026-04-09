@@ -130,7 +130,7 @@ module station_guard_holes() {
 // to the bottom of the reservoir boss extension.
 module station_bolt_lock_bosses() {
     boss_dia = bolt_lock_screw_dia + 3;
-    h = reservoir_seat - station_floor - reservoir_outer_wall_extension_below_mm;
+    h = reservoir_seat - station_floor;
 
     for (i = [0 : bolt_lock_count - 1]) {
         angle = bolt_lock_angle + i * (360 / bolt_lock_count);

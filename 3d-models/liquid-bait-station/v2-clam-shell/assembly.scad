@@ -8,8 +8,8 @@ use <needle-seal.scad>
 include <common.scad>
 
 // ── Settings ──────────────────────────────────────────────────────
-exploded   = false;  // spread parts vertically for inspection
-explode_gap = 25;    // mm gap in exploded view
+exploded   = true;  // spread parts vertically for inspection
+explode_gap = 1;    // mm gap in exploded view
 show_valve  = true;   // show the TPU needle seal (reservoir floor)
 show_batting = true;  // show bait ring in tray (assembly preview only)
 locked     = true;   // true = locked (pin engaged), false = unlocked (resting)
