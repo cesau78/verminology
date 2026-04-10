@@ -16,7 +16,7 @@ stem_from_scad() {
 }
 
 cd "$MODEL_DIR"
-PREVIEW="$(jq -r '.preview' "$CONFIG")"
+PROTOTYPE="$(jq -r '.prototype' "$CONFIG")"
 
 BRAND="$(jq -r '.brand_name' "$CONFIG")"
 PROD="$(jq -r '.product_name' "$CONFIG")"
@@ -27,10 +27,12 @@ VER="$(jq -r '.product_version' "$CONFIG" | sed 's/^[[:space:]]*//;s/[[:space:]]
 if [[ "${LBS_PRODUCTION:-}" == "1" ]]; then
   VERSION_FOLDER="$VER"
   LINE3="$VER"
+  SCAD_PROTOTYPE="false"
 else
   VERSION_FOLDER="${VER}-prototype"
   LINE3="$VER"
-  if [[ "$PREVIEW" == "true" ]]; then
+  SCAD_PROTOTYPE="$PROTOTYPE"
+  if [[ "$PROTOTYPE" == "true" ]]; then
     LINE3="$VER Prototype"
   fi
 fi
@@ -61,7 +63,7 @@ if ! command -v openscad >/dev/null 2>&1; then
   exit 1
 fi
 
-EXPORT_DEFS=(-D "draft_mesh=false" -D "crosssection_view=false")
+EXPORT_DEFS=(-D "prototype=$SCAD_PROTOTYPE" -D "crosssection_view=false")
 
 while IFS= read -r row; do
   scad="$(echo "$row" | jq -r '.scad')"

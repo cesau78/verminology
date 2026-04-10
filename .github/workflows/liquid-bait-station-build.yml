@@ -1,7 +1,8 @@
 # Ordered build: (1) stamp sync + prototype STL export, (2) assembly validation render,
-# (3) production STL export — only on manual dispatch when enabled (slow, $fn=128).
+# (3) production STL export (slow, $fn=128).
 #
-# Push to main runs (1) then (2). Use Actions → Run workflow to also run (3).
+# Push to main runs all three steps — every merged prototype change also
+# produces production STLs. Manual dispatch retains the option to skip (3).
 
 name: Liquid bait station — build
 
@@ -56,7 +57,7 @@ jobs:
           OUT_DIR="$GITHUB_WORKSPACE/3d-models/liquid-bait-station/.ci-validation"
           mkdir -p "$OUT_DIR"
           openscad -o "$OUT_DIR/v2-assembly.stl" \
-            -D "draft_mesh=true" -D "crosssection_view=false" \
+            -D "prototype=true" -D "crosssection_view=false" \
             "$GITHUB_WORKSPACE/3d-models/liquid-bait-station/v2-clam-shell/assembly.scad"
 
       - name: Verify product_version (optional)
@@ -72,7 +73,9 @@ jobs:
           echo "product_version matches: $cfg"
 
       - name: Production STL export
-        if: github.event_name == 'workflow_dispatch' && inputs.run_production_export
+        if: >-
+          github.event_name == 'push'
+          || (github.event_name == 'workflow_dispatch' && inputs.run_production_export)
         working-directory: 3d-models/liquid-bait-station
         env:
           LBS_PRODUCTION: "1"

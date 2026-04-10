@@ -23,17 +23,20 @@ function Get-ScadStem([string]$relativeScadPath) {
     return ($name -replace '-', '_')
 }
 
-# Stamp lines: 1 brand, 2 product, 3 version (+ Prototype if preview, unless LBS_PRODUCTION=1)
+# Stamp lines: 1 brand, 2 product, 3 version (+ Prototype if config says so, unless LBS_PRODUCTION=1)
 $line1 = [string]$cfg.brand_name
 $line2 = [string]$cfg.product_name
 $verTag = [string]$cfg.product_version.Trim()
 $isProduction = ($env:LBS_PRODUCTION -eq "1")
 if ($isProduction) {
     $line3 = $verTag
-} elseif ($cfg.preview -eq $true) {
+    $scadPrototype = "false"
+} elseif ($cfg.prototype -eq $true) {
     $line3 = ("{0} Prototype" -f $verTag).Trim()
+    $scadPrototype = "true"
 } else {
     $line3 = $verTag
+    $scadPrototype = "false"
 }
 
 $stampPath = Join-Path $ModelDir "stamp_generated.scad"
@@ -79,7 +82,7 @@ if (-not $openscad) {
 # STL export: full mesh quality, no cross-section.
 # Each export "stl" may contain {version_folder}: <product_version> or <product_version>-prototype
 # unless env LBS_PRODUCTION=1 (production → version only, no Prototype stamp).
-$exportDefines = @("-D", "draft_mesh=false", "-D", "crosssection_view=false")
+$exportDefines = @("-D", "prototype=$scadPrototype", "-D", "crosssection_view=false")
 $versionFolder = if ($isProduction) { $verTag } else { "{0}-prototype" -f $verTag }
 
 foreach ($exp in $exports) {

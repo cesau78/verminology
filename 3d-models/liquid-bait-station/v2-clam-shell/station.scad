@@ -129,8 +129,8 @@ module station_guard_holes() {
 // Vertical cylinder at each bolt position, from the station floor up
 // to the bottom of the reservoir boss extension.
 module station_bolt_lock_bosses() {
-    boss_dia = bolt_lock_screw_dia + 3;
-    h = reservoir_seat - station_floor;
+    boss_dia = bolt_lock_screw_dia + 4;
+    h = reservoir_seat - station_floor - reservoir_outer_wall_extension_below_mm;
 
     for (i = [0 : bolt_lock_count - 1]) {
         angle = bolt_lock_angle + i * (360 / bolt_lock_count);
