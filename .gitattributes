@@ -1,0 +1,2 @@
+# Git hooks must stay LF or Git Bash on Windows will choke on the shebang.
+.githooks/* text eol=lf

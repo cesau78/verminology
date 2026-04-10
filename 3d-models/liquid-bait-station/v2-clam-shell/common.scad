@@ -154,7 +154,7 @@ bolt_lock_angle       = 90;    // first pocket angle (degrees); next at +180°
 bolt_lock_r           = 29;    // hex pocket center radius from axis (mm)
 bolt_lock_screw_dia   = 3.2;   // clearance hole — 1/8″, file-friendly (mm)
 bolt_lock_head_dia    = 6.0;   // M3 cap-head OD + clearance (mm)
-bolt_lock_nut_af      = 5.8;   // hex nut pocket across-flats + clearance (mm)
+bolt_lock_nut_af      = 5.6;   // hex nut pocket across-flats + clearance (mm)
 bolt_lock_nut_h       = 2.6;   // nut pocket height (Z) with clearance (mm)
 
 // ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
@@ -178,7 +178,7 @@ scallop_offset      = 360 / guard_hole_count / 2;            // half-step from a
 fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
 
 // ── Info stamp (bottom / bed face) ────────────────────────────────
-// Lines and per-part flags: ../stamp_generated.scad (product-level; export script writes it).
+// Lines and per-part flags: ../build-stamp.scad (product-level; export script writes it).
 res_bottom_mark_size            = 6;    // line 1 (brand)
 res_bottom_mark_size_secondary  = 4;    // lines 2–3 (product, version)
 // Center-to-center spacing: lines 2–3 tight; lines 1–2 wider (rule sits halfway in that band).
@@ -195,10 +195,10 @@ res_bottom_mark_rule_right_inset    = 0.40;   // × (adv/n_chars): shorten from 
 res_bottom_mark_radial_shift_fraction = 0;
 res_bottom_mark_font     = "Liberation Sans:style=Bold";
 
-include <../stamp_generated.scad>
+include <../build-stamp.scad>
 
 // Deboss up to three lines on exterior bottom (Z=0). part_od = flat OD; stamp shifted +Y toward mid-radius.
-// Lines 1–3 from stamp_generated.scad: brand, product, version (+ Prototype when preview).
+// Lines 1–3 from build-stamp.scad: brand, product, version (+ Prototype when preview).
 module part_bottom_info_stamp_deboss(enable, part_od) {
     depth = reservoir_bottom_deboss_depth + 0.02;
     y1 = res_bottom_mark_gap_1_2;

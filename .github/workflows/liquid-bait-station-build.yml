@@ -94,7 +94,7 @@ jobs:
             3d-models/liquid-bait-station/latest-builds/**/*.stl
             3d-models/liquid-bait-station/latest-builds/**/*.md
             3d-models/liquid-bait-station/.ci-validation/v2-assembly.stl
-            3d-models/liquid-bait-station/stamp_generated.scad
+            3d-models/liquid-bait-station/build-stamp.scad
 
       - name: Commit and push production builds
         if: >-
@@ -106,11 +106,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add latest-builds/ stamp_generated.scad
+          VER="$(jq -r '.product_version' build-config.json | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          git add "latest-builds/$VER/"
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            VER="$(jq -r '.product_version' build-config.json)"
             git commit -m "build: production STLs for $VER [skip ci]"
             git push origin HEAD:refs/heads/$PUSH_REF
           fi

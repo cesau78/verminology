@@ -1,0 +1,31 @@
+#!/bin/sh
+# Pre-commit: rebuild prototype STLs when liquid-bait-station sources change.
+# Calls the PowerShell export script (prototype mode) and stages the output
+# so every commit with SCAD changes ships matching prototype meshes.
+
+LBS_DIR="3d-models/liquid-bait-station"
+
+# Only trigger when source files (not builds or stamps) are staged.
+staged=$(git diff --cached --name-only -- \
+    "$LBS_DIR/v2-clam-shell/" \
+    "$LBS_DIR/build-config.json" \
+    "$LBS_DIR/scripts/")
+
+[ -z "$staged" ] && exit 0
+
+echo "[pre-commit] Liquid bait station source changed — rebuilding prototype STLs…"
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass \
+    -File "$LBS_DIR/scripts/Export-OpenScadStl.ps1" || {
+    echo "[pre-commit] Prototype STL build failed. Commit aborted."
+    exit 1
+}
+
+# Read version so we stage only the matching prototype folder.
+VER=$(powershell.exe -NoProfile -Command \
+    "(Get-Content '$LBS_DIR/build-config.json' | ConvertFrom-Json).product_version.Trim()")
+
+git add "$LBS_DIR/build-stamp.scad" \
+        "$LBS_DIR/latest-builds/${VER}-prototype/"
+
+echo "[pre-commit] Prototype STLs rebuilt and staged."
