@@ -25,6 +25,7 @@ module reservoir() {
             reservoir_tabs();
             reservoir_ant_tunnels();
             reservoir_bolt_lock_bosses();
+            reservoir_bolt_lock_seal_prism();
         }
         reservoir_bolt_lock_pocket();
         reservoir_side_scallops();
@@ -148,6 +149,33 @@ module reservoir_bolt_lock_bosses() {
                     }
                 translate([0, -boss_w / 2, z_bot])
                     cube([reservoir_od, boss_w, h]);
+            }
+    }
+}
+
+// ── Bolt Lock — Nut Pocket Seal Prism ────────────────────────────
+// Wedge atop each bolt-lock boss that seals the nut pocket ceiling
+// from the fluid cavity.  Sides slope at 45° from the boss edges
+// inward to the strut centerline — a printable overhang when the
+// reservoir is printed upside-down.
+module reservoir_bolt_lock_seal_prism() {
+    nut_ac  = bolt_lock_nut_af / cos(30);
+    r_inner = bolt_lock_r - nut_ac / 2 - 1.5;
+    boss_w  = nut_ac + 3;
+    prism_h = (boss_w - strut_thickness) / 2;
+    span    = reservoir_od / 2 - r_inner;
+
+    for (i = [0 : bolt_lock_count - 1]) {
+        angle = bolt_lock_angle + i * (360 / bolt_lock_count);
+        rotate([0, 0, angle])
+            intersection() {
+                cylinder(h = skirt_z_start + prism_h + 1, d = reservoir_od);
+                hull() {
+                    translate([r_inner, -boss_w / 2, skirt_z_start])
+                        cube([span, boss_w, 0.01]);
+                    translate([r_inner, -strut_thickness / 2, skirt_z_start + prism_h])
+                        cube([span, strut_thickness, 0.01]);
+                }
             }
     }
 }
