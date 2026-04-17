@@ -1,7 +1,7 @@
 {
   "brand_name": "Verminology",
   "product_name": "Liquid Bait Station",
-  "product_version": "v2.5.3",
+  "product_version": "v2.6.0",
   "prototype": true,
   "exports": [
     {
@@ -17,6 +17,16 @@
     {
       "scad": "v2-clam-shell/needle-seal.scad",
       "stl": "latest-builds/{version_folder}/needle-seal.stl",
+      "stamp": null
+    },
+    {
+      "scad": "v2-clam-shell/tools/grip.scad",
+      "stl": "latest-builds/{version_folder}/grip.stl",
+      "stamp": null
+    },
+    {
+      "scad": "v2-clam-shell/tools/anvil.scad",
+      "stl": "latest-builds/{version_folder}/anvil.stl",
       "stamp": null
     }
   ]
