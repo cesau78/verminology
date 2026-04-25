@@ -19,6 +19,7 @@ module reservoir() {
                     }
                     reservoir_struts();
                     reservoir_skirt();
+                    reservoir_spring_housing();
                 }
                 reservoir_ant_tunnel_cutouts();
             }
@@ -61,6 +62,19 @@ module reservoir_valve_bore() {
     render_if_needed()
         translate([0, 0, -0.5])
             cylinder(h = wall + 1, d = valve_bore_id);
+}
+
+// ── Spring Housing ───────────────────────────────────────────────
+// Hollow cylinder hanging from the reservoir ceiling.  The flow-stop
+// spring and stopper piston ride inside.
+module reservoir_spring_housing() {
+    render_if_needed()
+        translate([0, 0, wall + spring_housing_bottom_clearance])
+            difference() {
+                cylinder(h = spring_housing_h, d = spring_housing_od);
+                translate([0, 0, -0.01])
+                    cylinder(h = spring_housing_bore_h + 0.01, d = spring_housing_id);
+            }
 }
 
 // ── Guide Tabs ────────────────────────────────────────────────────

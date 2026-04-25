@@ -115,10 +115,34 @@ inner_bait_barrier_hole_z       = station_floor + inner_bait_barrier_hole_dia / 
 inner_bait_barrier_hole_start_r = inner_bait_barrier_id / 2 - 0.5;   // start slightly inside bore
 inner_bait_barrier_hole_length  = inner_bait_barrier_radial_t + 1.0;  // through wall + margin
 
-// Computed pin height (from station z=0) — apex extends 1 mm above needle seal disk top.
-// Needle insert: base OD = inner barrier center hole ID; coaxial pocket; pin apex at pin_top.
-// Assembly: valve_z = reservoir_seat − valve_flange_h → disk top = reservoir_seat + valve_disk_h
-pin_top          = reservoir_seat + valve_disk_h + 1;
+// ── Needle — Perpendicular Flow Hole ──────────────────────────────
+// Side port replaces the open-top axial channel.  Bottom tangent of
+// the hole aligns to the bottom of the 3rd seal ring (retention barb).
+needle_flow_hole_dia      = pin_channel_dia;
+needle_flow_hole_z_bottom = reservoir_seat + valve_disk_h;
+needle_flow_hole_z_center = needle_flow_hole_z_bottom + needle_flow_hole_dia / 2;
+needle_above_flow_hole    = 4;   // mm of solid pin above hole top — pushes stopper clear
+pin_top = needle_flow_hole_z_bottom + needle_flow_hole_dia + needle_above_flow_hole;
+
+// ── Flow Stopper — Compression Spring ──────────────────────────────
+spring_od              = 4.4;    // outer diameter (mm)
+spring_height          = 20;     // free length (mm)
+
+// ── Flow Stopper — Stopper Piston ──────────────────────────────────
+stopper_od         = 7;                       // outer diameter (mm)
+stopper_h          = 10;                      // total height (mm)
+stopper_bore_id    = 5;                       // spring bore — press-fit with barb (mm)
+stopper_bore_depth = 8;                       // bore depth from top (mm)
+stopper_clearance  = 0.3;                     // per-side sliding clearance in housing (mm)
+
+// ── Flow Stopper — Spring Housing (reservoir ceiling) ──────────────
+spring_housing_id   = stopper_od + stopper_clearance * 2;
+spring_housing_wall = 1.5;
+spring_housing_od   = spring_housing_id + spring_housing_wall * 2;
+spring_housing_bottom_clearance = 3;  // mm gap between housing and floor
+spring_housing_ceiling_h = 4;         // solid ceiling plug inside bore — spring pushes against this
+spring_housing_h    = reservoir_cavity_h - spring_housing_bottom_clearance;
+spring_housing_bore_h = spring_housing_h - spring_housing_ceiling_h;  // open bore height
 
 // ── Guide Tabs (reservoir slides straight into station bore) ──────
 // Three tabs on the reservoir outer wall drop into three vertical slots

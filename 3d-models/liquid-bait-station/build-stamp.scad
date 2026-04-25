@@ -3,9 +3,10 @@
 
 info_stamp_line1 = "Verminology";
 info_stamp_line2 = "Liquid Bait Station";
-info_stamp_line3 = "v2.6.0 Prototype";
+info_stamp_line3 = "v2.7.0 Prototype";
 reservoir_stamp_bottom = false;
 station_stamp_bottom = true;
 needle_seal_stamp_bottom = false;
+stopper_stamp_bottom = false;
 grip_stamp_bottom = false;
 anvil_stamp_bottom = false;

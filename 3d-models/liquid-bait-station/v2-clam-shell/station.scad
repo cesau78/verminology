@@ -95,12 +95,18 @@ module station_needle() {
 
 module station_needle_channels() {
     vb = max(0, pin_channel_z_bottom);
-    vh = pin_top + 0.5 - vb;
+    // Axial channel caps at the flow-hole top (solid pin above)
+    vh = needle_flow_hole_z_center + needle_flow_hole_dia / 2 + 0.5 - vb;
     translate([0, 0, vb])
         cylinder(h = vh, d = pin_channel_dia);
+    // Lateral bore near base — fluid exit to tray (unchanged)
     translate([pin_tunnel_x_center, 0, pin_tunnel_z])
         rotate([0, 90, 0])
             cylinder(h = pin_tunnel_reach, d = pin_channel_dia, center = true);
+    // Perpendicular flow hole — fluid entry from reservoir cavity
+    translate([0, 0, needle_flow_hole_z_center])
+        rotate([0, 90, 0])
+            cylinder(h = pin_dia + 1, d = needle_flow_hole_dia, center = true);
 }
 
 module station_inner_barrier_wall_holes() {
