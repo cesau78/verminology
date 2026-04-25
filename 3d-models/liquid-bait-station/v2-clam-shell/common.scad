@@ -6,7 +6,7 @@
 // prototype: true → fast preview ($fn=32); false → production mesh ($fn=128).
 // Export scripts override via -D prototype=<true|false> from build-config.json.
 prototype = true;
-crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -43,7 +43,7 @@ reservoir_outer_wall_extension_below_mm = 3;
 valve_disk_od  = 16;                        // disk outer diameter (mm)
 valve_bore_id  = valve_disk_od;             // snug sliding fit — FDM shrinkage holds it
 valve_disk_h   = wall;                      // same as floor thickness — flush inside
-valve_flange_h  = 2;                        // flange height (mm) — prevents push-through
+valve_flange_h  = 3;                        // flange height (mm) — extends past inner barrier for compression seal
 valve_retainer_od = valve_disk_od + 1;       // top retention disk OD — just past bore edge
 valve_retainer_id = valve_disk_od - 4;       // top retention disk ID — 2mm lip inward
 valve_retainer_h  = valve_flange_h;          // same thickness as bottom flange
@@ -68,12 +68,14 @@ bait_barrier_bottom_z = station_floor;   // top of station floor slab
 bait_barrier_top_z    = reservoir_seat;    // flush with bottom of seated reservoir
 bait_barrier_h        = bait_barrier_top_z - bait_barrier_bottom_z;  // = tray_gap_below_reservoir
 
-// Inner bait barrier — concentric annulus, same height as outer; pin channels cut through (lateral bore crosses wall)
+// Inner bait barrier — concentric annulus, shorter than outer; thick wall creates compression seal against TPU flange
 inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
-inner_bait_barrier_radial_t = 1;   // wall thickness (mm)
+inner_bait_barrier_radial_t = 2;   // wall thickness (mm) — doubled for rigid compression seal against TPU
 inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
-valve_flange_od = inner_bait_barrier_id;     // flange OD matches inner barrier ID — snug nest fit
+inner_bait_barrier_h_reduction = 2;   // mm shorter than outer barrier so TPU flange extends past
+inner_bait_barrier_h = bait_barrier_h - inner_bait_barrier_h_reduction;
+valve_flange_od = inner_bait_barrier_id + 1;  // 0.5mm interference per side — barrier edge presses into TPU
 
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;

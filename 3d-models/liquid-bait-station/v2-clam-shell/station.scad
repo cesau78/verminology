@@ -74,9 +74,9 @@ module station_inner_bait_barrier_ring() {
         difference() {
             translate([0, 0, bait_barrier_bottom_z])
                 difference() {
-                    cylinder(h = bait_barrier_h, d = inner_bait_barrier_od);
+                    cylinder(h = inner_bait_barrier_h, d = inner_bait_barrier_od);
                     translate([0, 0, -0.01])
-                        cylinder(h = bait_barrier_h + 0.02, d = inner_bait_barrier_id);
+                        cylinder(h = inner_bait_barrier_h + 0.02, d = inner_bait_barrier_id);
                 }
             station_needle_channels();
             station_inner_barrier_wall_holes();
