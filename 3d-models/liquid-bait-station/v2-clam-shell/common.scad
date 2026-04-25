@@ -69,13 +69,15 @@ bait_barrier_top_z    = reservoir_seat;    // flush with bottom of seated reserv
 bait_barrier_h        = bait_barrier_top_z - bait_barrier_bottom_z;  // = tray_gap_below_reservoir
 
 // Inner bait barrier — concentric annulus, shorter than outer; thick wall creates compression seal against TPU flange
-inner_bait_barrier_od_in    = 1;   // outer diameter (inches)
-inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;
-inner_bait_barrier_radial_t = 2;   // wall thickness (mm) — doubled for rigid compression seal against TPU
-inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;
-inner_bait_barrier_h_reduction = 2;   // mm shorter than outer barrier so TPU flange extends past
+inner_bait_barrier_od_in    = 1;   // outer diameter of this ring (inches) — bait-annulus side
+inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;   // 1.0 inch = 25.4 mm
+inner_bait_barrier_radial_t = 4;   // mm — 2× prior 2 mm; ID follows from fixed OD
+inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;   // 25.4 − 8 = 17.4
+// Shorter than outer barrier; Z overlap with TPU flange = valve_flange_h − this = inner_bait_valve_squeeze_z
+inner_bait_valve_squeeze_z    = 0.2;   // mm — axial contact / crush target (inner barrier top vs flange bottom)
+inner_bait_barrier_h_reduction = valve_flange_h - inner_bait_valve_squeeze_z;   // 2.8 @ valve_flange_h=3, squeeze=0.2
 inner_bait_barrier_h = bait_barrier_h - inner_bait_barrier_h_reduction;
-valve_flange_od = inner_bait_barrier_id + 1;  // 0.5mm interference per side — barrier edge presses into TPU
+valve_flange_od = inner_bait_barrier_od;  // bottom flange — same 1" OD as inner barrier
 
 // Guard holes: through outer shell into tray, inset from bore ID
 guard_hole_inner_r = station_id / 2 - 2;
