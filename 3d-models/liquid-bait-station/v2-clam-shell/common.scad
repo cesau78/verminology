@@ -86,7 +86,7 @@ guard_hole_inner_r = station_id / 2 - 2;
 pin_dia         = 6;   // pin outer diameter (mm)
 
 // ── Needle Seal — TPU interference fit around pin ─
-seal_hole_dia = pin_dia - 0.2;  // 5.8mm @ pin 6 — 0.2mm diametral, 0.10mm/side in TPU
+seal_hole_dia = pin_dia - 0.1;  // 5.9mm @ pin 6 — 0.1mm diametral, 0.05mm/side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)
 // Foil-piercing tip: frustum on outer surface only; bore stays straight. ~50–60° included angle is
