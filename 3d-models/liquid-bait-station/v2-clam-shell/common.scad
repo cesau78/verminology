@@ -6,7 +6,7 @@
 // prototype: true → fast preview ($fn=32); false → production mesh ($fn=128).
 // Export scripts override via -D prototype=<true|false> from build-config.json.
 prototype = true;
-crosssection_view = true;  // cut the model along a plane to inspect internals
+crosssection_view = false;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -86,7 +86,7 @@ guard_hole_inner_r = station_id / 2 - 2;
 pin_dia         = 6;   // pin outer diameter (mm)
 
 // ── Needle Seal — TPU interference fit around pin ─
-seal_hole_dia = pin_dia - 0.3;  // 5.7mm — 0.15mm interference per side in TPU
+seal_hole_dia = pin_dia - 0.2;  // 5.8mm @ pin 6 — 0.2mm diametral, 0.10mm/side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)
 // Foil-piercing tip: frustum on outer surface only; bore stays straight. ~50–60° included angle is
@@ -129,7 +129,7 @@ spring_od              = 4.4;    // outer diameter (mm)
 spring_height          = 20;     // free length (mm)
 
 // ── Flow Stopper — Stopper Piston ──────────────────────────────────
-stopper_od         = 7;                       // outer diameter (mm)
+stopper_od         = 10;                       // outer diameter (mm)
 stopper_h          = 10;                      // total height (mm)
 stopper_bore_id    = 5;                       // spring bore — press-fit with barb (mm)
 stopper_bore_depth = 8;                       // bore depth from top (mm)
