@@ -40,7 +40,7 @@ reservoir_outer_wall_extension_below_mm = 3;
 // Volume: π × 36.5² × cavity_h (slightly less with dome / features)
 
 // ── Reservoir floor bore + TPU needle seal stack (valve_* shared with needle-seal.scad) ──
-valve_disk_od  = 16;                        // disk outer diameter (mm)
+valve_disk_od  = 17;                        // disk outer diameter (mm)
 valve_bore_id  = valve_disk_od;             // snug sliding fit — FDM shrinkage holds it
 valve_disk_h   = wall;                      // same as floor thickness — flush inside
 valve_flange_h  = 3;                        // flange height (mm) — extends past inner barrier for compression seal
@@ -86,7 +86,7 @@ guard_hole_inner_r = station_id / 2 - 2;
 pin_dia         = 6;   // pin outer diameter (mm)
 
 // ── Needle Seal — TPU interference fit around pin ─
-seal_hole_dia = pin_dia - 0.1;  // 5.9mm @ pin 6 — 0.1mm diametral, 0.05mm/side in TPU
+seal_hole_dia = pin_dia - 0;  // 6.0mm @ pin 6 — 0.0mm diametral, 0.00mm/side in TPU
 
 pin_channel_dia = 3;   // internal fluid channel diameter (mm)
 // Foil-piercing tip: frustum on outer surface only; bore stays straight. ~50–60° included angle is
