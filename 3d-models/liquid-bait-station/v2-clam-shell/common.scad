@@ -6,7 +6,7 @@
 // prototype: true → fast preview ($fn=32); false → production mesh ($fn=128).
 // Export scripts override via -D prototype=<true|false> from build-config.json.
 prototype = true;
-crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_view = true;  // cut the model along a plane to inspect internals
 crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
@@ -129,17 +129,24 @@ spring_od              = 4.4;    // outer diameter (mm)
 spring_height          = 20;     // free length (mm)
 
 // ── Flow Stopper — Stopper Piston ──────────────────────────────────
-stopper_od         = 10;                       // outer diameter (mm)
-stopper_h          = 10;                      // total height (mm)
-stopper_bore_id    = 5;                       // spring bore — press-fit with barb (mm)
-stopper_bore_depth = 8;                       // bore depth from top (mm)
-stopper_clearance  = 0.3;                     // per-side sliding clearance in housing (mm)
+// Shank (`stopper_od`) sets spring housing ID; bottom sealing disk is wider.
+stopper_od               = 7;                 // shank OD — slides in spring housing (mm)
+stopper_bottom_disk_od   = 10;                // bottom face disk OD — wider than shank (mm)
+stopper_bottom_disk_h    = 2;                 // solid disk height; spring bore only in shank (mm)
+stopper_h                = 15;                // total height incl. bottom disk (mm)
+stopper_bore_id          = 5;                 // spring bore — press-fit with barb (mm)
+stopper_bore_depth       = 13;                // bore depth from top (mm)
+stopper_clearance        = 0.3;               // per-side sliding clearance in housing (mm)
 
 // ── Flow Stopper — Spring Housing (reservoir ceiling) ──────────────
 spring_housing_id   = stopper_od + stopper_clearance * 2;
 spring_housing_wall = 1.5;
 spring_housing_od   = spring_housing_id + spring_housing_wall * 2;
-spring_housing_bottom_clearance = 3;  // mm gap between housing and floor
+// Locked: stopper bottom = (pin_top − reservoir_seat); housing lower rim is flush with that plane
+// so the 10 mm collar sits in the opening and overlaps the housing wall (OD > collar > bore ID).
+spring_housing_collar_axial_clearance_mm = 0;
+spring_housing_bottom_clearance =
+    (pin_top - reservoir_seat) - wall - spring_housing_collar_axial_clearance_mm;
 spring_housing_ceiling_h = 4;         // solid ceiling plug inside bore — spring pushes against this
 spring_housing_h    = reservoir_cavity_h - spring_housing_bottom_clearance;
 spring_housing_bore_h = spring_housing_h - spring_housing_ceiling_h;  // open bore height

@@ -8,12 +8,17 @@
 include <common.scad>
 
 module stopper() {
+    stopper_body_h = stopper_h - stopper_bottom_disk_h;
     difference() {
-        cylinder(h = stopper_h, d = stopper_od);
+        union() {
+            cylinder(h = stopper_bottom_disk_h, d = stopper_bottom_disk_od);
+            translate([0, 0, stopper_bottom_disk_h])
+                cylinder(h = stopper_body_h, d = stopper_od);
+        }
         translate([0, 0, stopper_h - stopper_bore_depth])
             cylinder(h = stopper_bore_depth + 0.01, d = stopper_bore_id);
     }
 }
 
 // ── Render ────────────────────────────────────────────────────────
-crosssection(stopper_od) stopper();
+crosssection(max(stopper_od, stopper_bottom_disk_od)) stopper();

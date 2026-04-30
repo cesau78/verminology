@@ -10,7 +10,7 @@ include <common.scad>
 
 // ── Settings ──────────────────────────────────────────────────────
 exploded   = true;  // spread parts vertically for inspection
-explode_gap = 0;    // mm gap in exploded view
+explode_gap = 2;    // mm half-offset each way when exploded (station −Z, cup +Z → 2× gap)
 show_valve   = true;   // show the TPU needle seal (reservoir floor)
 show_stopper = true;   // show flow stopper + spring inside reservoir
 show_batting = true;   // show bait ring in tray (assembly preview only)
@@ -26,30 +26,34 @@ batting_h     = batting_h_in * 25.4;
 
 // ── Positions ─────────────────────────────────────────────────────
 // Reservoir slides straight down; locked = fully seated, unlocked = raised.
+// Exploded: reservoir stack +`explode_gap`, station/needle −`explode_gap` → 2× separation.
+station_explode_z = exploded ? -explode_gap : 0;
 res_z = locked
     ? reservoir_seat
     : reservoir_seat + 15;
 res_z_final = res_z + (exploded ? explode_gap : 0);
 
 // ── Valve position (shared by flange and disk) ──────────────────
-valve_z = res_z_final - valve_flange_h - (exploded ? explode_gap / 2 : 0);
+valve_z = res_z_final - valve_flange_h;
 
 // ── Stopper position ─────────────────────────────────────────────
-// Locked: needle pushes stopper up (bottom face at pin tip).
-// Unlocked: spring seats stopper against seal (bottom face ≈ reservoir z=0).
-stopper_z = locked ? pin_top : res_z_final;
-stopper_z_final = stopper_z + (exploded ? explode_gap * 0.75 : 0);
+// Locked: bottom face on needle tip (`pin_top` with station at z=0; follows `station_explode_z`).
+// Unlocked: bottom ≈ reservoir outer bottom; +`explode_gap` when exploded with the cup.
+stopper_z_final = locked
+    ? pin_top + station_explode_z
+    : res_z + (exploded ? explode_gap : 0);
 
 // ── Assembly ──────────────────────────────────────────────────────
 crosssection(station_od * 2) {
     // Station shell with integrated needle pin
     color("SlateGray", 0.8)
-        bait_station();
+        translate([0, 0, station_explode_z])
+            bait_station();
 
     // Bait ring on tray floor (visualization)
     if (show_batting)
         color("Peru", 0.9)
-            translate([0, 0, station_floor])
+            translate([0, 0, station_floor + station_explode_z])
                 difference() {
                     cylinder(h = batting_h, d = batting_od);
                     translate([0, 0, -0.02])
