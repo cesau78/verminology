@@ -60,23 +60,22 @@ station_height   = 23;   // total station height (mm)
 
 // ── Bait barrier ring (annulus in tray) ────────────────────────────
 // difference( outer_cyl, inner_cyl ) — wall from tray floor up to reservoir bottom.
-bait_barrier_id_in    = 2;   // inner clear diameter (inches)
-bait_barrier_id       = bait_barrier_id_in * 25.4;   // 50.8 mm
-bait_barrier_radial_t = 1;   // radial wall thickness (mm)
+bait_barrier_radial_t = 3;   // radial wall thickness (mm) — matches inner barrier
+bait_barrier_id       = 42.6;   // mm — inset so seal ring OD clears labyrinth outer tube by 1 mm
 bait_barrier_od       = bait_barrier_id + 2 * bait_barrier_radial_t;
 bait_barrier_bottom_z = station_floor;   // top of station floor slab
 bait_barrier_top_z    = reservoir_seat;    // flush with bottom of seated reservoir
-bait_barrier_h        = bait_barrier_top_z - bait_barrier_bottom_z;  // = tray_gap_below_reservoir
+bait_barrier_squeeze  = 0.2;              // mm — axial compression target for TPU seals
+bait_barrier_h        = (bait_barrier_top_z - bait_barrier_bottom_z)
+                        - (valve_flange_h - bait_barrier_squeeze);  // shortened for seal compression
 
-// Inner bait barrier — concentric annulus, shorter than outer; thick wall creates compression seal against TPU flange
+// Inner bait barrier — concentric annulus, same height as outer
 inner_bait_barrier_od_in    = 1;   // outer diameter of this ring (inches) — bait-annulus side
 inner_bait_barrier_od       = inner_bait_barrier_od_in * 25.4;   // 1.0 inch = 25.4 mm
-inner_bait_barrier_radial_t = 4;   // mm — 2× prior 2 mm; ID follows from fixed OD
-inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;   // 25.4 − 8 = 17.4
-// Shorter than outer barrier; Z overlap with TPU flange = valve_flange_h − this = inner_bait_valve_squeeze_z
-inner_bait_valve_squeeze_z    = 0.2;   // mm — axial contact / crush target (inner barrier top vs flange bottom)
-inner_bait_barrier_h_reduction = valve_flange_h - inner_bait_valve_squeeze_z;   // 2.8 @ valve_flange_h=3, squeeze=0.2
-inner_bait_barrier_h = bait_barrier_h - inner_bait_barrier_h_reduction;
+inner_bait_barrier_radial_t = 3;   // mm — matches outer barrier
+inner_bait_barrier_id       = inner_bait_barrier_od - 2 * inner_bait_barrier_radial_t;   // 25.4 − 6 = 19.4
+inner_bait_valve_squeeze_z  = bait_barrier_squeeze;   // shared compression target
+inner_bait_barrier_h        = bait_barrier_h;          // same height as outer barrier
 valve_flange_od = inner_bait_barrier_od;  // bottom flange — same 1" OD as inner barrier
 
 // Guard holes: through outer shell into tray, inset from bore ID
@@ -164,13 +163,31 @@ guard_hole_dia   = 3.2;  // hole diameter — ants only
 guard_hole_count = 12;   // number around circumference
 guard_hole_z     = station_floor + 1.5;  // just above flat floor, opens into tray cavity
 
-// ── Ant Tunnels (half-cone ramps from wall to valve retainer) ────
-ant_tunnel_count  = guard_hole_count;              // one tunnel per guard hole
-// Cone base radius sized so adjacent cones touch at the reservoir wall
-ant_tunnel_r_out  = reservoir_id / 2 * sin(180 / ant_tunnel_count);  // ~9.4mm
-ant_tunnel_r_in   = ant_tunnel_r_out - wall;       // passage radius (2mm wall)
-ant_tunnel_start  = valve_retainer_od / 2 + 1;     // inner end radius from center (just outside retainer)
-ant_tunnel_length = reservoir_id / 2 - ant_tunnel_start; // radial span: retainer edge to reservoir inner wall
+// ── Seal Ring (TPU — snaps into reservoir floor, seals bait barrier top) ─
+// Annular ring press-fits into a groove on the reservoir bottom face.
+// When assembled, compresses against the outer bait barrier wall top edge,
+// sealing dry side (ant access) from wet side (feeding area).
+seal_ring_radial_w     = bait_barrier_radial_t;                         // wall thickness = barrier wall (3 mm)
+seal_ring_center_d     = (bait_barrier_od + bait_barrier_id) / 2;     // barrier wall center line
+seal_ring_od           = seal_ring_center_d + seal_ring_radial_w;
+seal_ring_id           = seal_ring_center_d - seal_ring_radial_w;
+seal_ring_groove_depth = wall / 2;                                     // half the reservoir floor thickness
+seal_ring_h            = valve_flange_h + seal_ring_groove_depth;      // flange height + groove
+seal_ring_protrusion   = seal_ring_h - seal_ring_groove_depth;         // = valve_flange_h below reservoir face
+
+// ── Labyrinth Tubes (R-shaped sealed passages through reservoir) ─────
+// Each tube bridges the outer bait barrier: entry on dry side (outside
+// barrier), up through the reservoir cavity, across near the ceiling,
+// back down to the wet side (inside barrier).  Liquid must flow uphill
+// to escape — gravity prevents leaks at tilt angles.
+labyrinth_count       = 6;
+labyrinth_id          = guard_hole_dia;                               // passage diameter (mm)
+labyrinth_wall_t      = 1.0;                                          // tube wall thickness (mm)
+labyrinth_od          = labyrinth_id + 2 * labyrinth_wall_t;
+labyrinth_outer_r     = reservoir_id / 2 - labyrinth_od / 2;          // flush with cavity wall
+labyrinth_inner_r     = 13 + labyrinth_od / 2;                          // inner wall at 13mm from center
+labyrinth_bend_z      = wall + reservoir_cavity_h - labyrinth_od / 2;       // flush with ceiling
+labyrinth_angle_start = 0;                                             // first tube at 0°
 
 // ── Reservoir Skirt (flush outer shell when assembled) ───────────
 // Extends the reservoir OD to match station OD above the station rim.
@@ -192,10 +209,8 @@ bolt_lock_head_dia    = 6.0;   // M3 cap-head OD + clearance (mm)
 bolt_lock_nut_af      = 5.6;   // hex nut pocket across-flats + clearance (mm)
 bolt_lock_nut_h       = 2.6;   // nut pocket height (Z) with clearance (mm)
 
-// ── Internal Struts (reservoir ceiling bridging + anti-slosh) ─────
-strut_count     = ant_tunnel_count;  // one strut per tunnel, aligned
-strut_thickness = 1;   // strut wall thickness (mm)
-strut_gap       = valve_bore_id / 2 + 2;  // stop short of valve bore center
+// ── Strut Thickness (retained for bolt-lock seal prism taper) ────
+strut_thickness = 1;   // mm — prism taper target width
 
 // ── Side Grip Scallops (oval indents on outer wall) ──────────────
 scallop_count   = 12;    // number around circumference

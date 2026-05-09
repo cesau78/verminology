@@ -5,15 +5,17 @@
 use <station.scad>
 use <reservoir.scad>
 use <needle-seal.scad>
+use <seal-ring.scad>
 use <stopper.scad>
 include <common.scad>
 
 // ── Settings ──────────────────────────────────────────────────────
 exploded   = true;  // spread parts vertically for inspection
 explode_gap = 2;    // mm half-offset each way when exploded (station −Z, cup +Z → 2× gap)
-show_valve   = true;   // show the TPU needle seal (reservoir floor)
-show_stopper = true;   // show flow stopper + spring inside reservoir
-show_batting = true;   // show bait ring in tray (assembly preview only)
+show_valve     = true;   // show the TPU needle seal (reservoir floor)
+show_seal_ring = true;   // show the TPU barrier seal ring (reservoir bottom)
+show_stopper   = true;   // show flow stopper + spring inside reservoir
+show_batting   = true;   // show bait ring in tray (assembly preview only)
 locked     = true;   // true = locked (pin engaged), false = unlocked (resting)
 
 // Bait / batting — assembly depiction only (not a printed part)
@@ -70,6 +72,12 @@ crosssection(station_od * 2) {
         color("LimeGreen", 0.9)
             translate([0, 0, valve_z])
                 needle_seal();
+
+    // Barrier seal ring — TPU ring on reservoir bottom face
+    if (show_seal_ring)
+        color("LimeGreen", 0.9)
+            translate([0, 0, res_z_final - seal_ring_protrusion])
+                seal_ring();
 
     // Flow stopper piston
     if (show_stopper)

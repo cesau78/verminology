@@ -17,17 +17,17 @@ module reservoir() {
                         reservoir_cavity();
                         reservoir_valve_bore();
                     }
-                    reservoir_struts();
+                    reservoir_labyrinth_tubes();
                     reservoir_skirt();
                     reservoir_spring_housing();
                 }
-                reservoir_ant_tunnel_cutouts();
             }
             reservoir_tabs();
-            reservoir_ant_tunnels();
             reservoir_bolt_lock_bosses();
             reservoir_bolt_lock_seal_prism();
         }
+        reservoir_labyrinth_bores();
+        reservoir_seal_ring_groove();
         reservoir_bolt_lock_pocket();
         reservoir_side_scallops();
         reservoir_top_fillet();
@@ -86,16 +86,37 @@ module reservoir_tabs() {
                 cube([tab_d + 0.01, tab_w, tab_h]);
 }
 
-// ── Internal Struts ───────────────────────────────────────────────
-module reservoir_struts() {
+// ── Labyrinth Tube Shape (shared by shell and bore) ──────────────
+// R-shaped path: outer vertical leg → horizontal crossover → inner leg.
+// Parameter `d` selects OD (solid shell) or ID (passage bore).
+module _labyrinth_tube_shape(d) {
+    leg_h = labyrinth_bend_z + d / 2;
+    span  = labyrinth_outer_r - labyrinth_inner_r;
+    // Outer vertical leg (flush with cavity wall)
+    translate([labyrinth_outer_r, 0, -0.01])
+        cylinder(h = leg_h + 0.01, d = d);
+    // Inner vertical leg
+    translate([labyrinth_inner_r, 0, -0.01])
+        cylinder(h = leg_h + 0.01, d = d);
+    // Horizontal crossover at bend height
+    translate([labyrinth_inner_r, 0, labyrinth_bend_z])
+        rotate([0, 90, 0])
+            cylinder(h = span, d = d);
+}
+
+// ── Labyrinth Tubes — Solid Outer Shells ─────────────────────────
+module reservoir_labyrinth_tubes() {
     render_if_needed()
-        for (i = [0 : strut_count - 1]) {
-            angle = i * (360 / strut_count);
-            strut_length = reservoir_id / 2 - strut_gap;
-            rotate([0, 0, angle])
-                translate([strut_gap, -strut_thickness / 2, wall])
-                    cube([strut_length + 0.01, strut_thickness, reservoir_cavity_h + 0.01]);
-        }
+        for (i = [0 : labyrinth_count - 1])
+            rotate([0, 0, labyrinth_angle_start + i * (360 / labyrinth_count)])
+                _labyrinth_tube_shape(labyrinth_od);
+}
+
+// ── Labyrinth Tubes — Inner Bore Subtraction ─────────────────────
+module reservoir_labyrinth_bores() {
+    for (i = [0 : labyrinth_count - 1])
+        rotate([0, 0, labyrinth_angle_start + i * (360 / labyrinth_count)])
+            _labyrinth_tube_shape(labyrinth_id);
 }
 
 // ── Skirt ─────────────────────────────────────────────────────────
@@ -108,37 +129,17 @@ module reservoir_skirt() {
             }
 }
 
-// ── Ant Tunnels ───────────────────────────────────────────────────
-module reservoir_ant_tunnels() {
-    for (i = [0 : ant_tunnel_count - 1]) {
-        angle = i * (360 / ant_tunnel_count);
-        rotate([0, 0, angle])
-            translate([ant_tunnel_start, 0, 0.01])
-                rotate([0, 90, 0])
-                    difference() {
-                        intersection() {
-                            cylinder(h = ant_tunnel_length,
-                                     r1 = 2, r2 = ant_tunnel_r_out);
-                            translate([-ant_tunnel_r_out, -ant_tunnel_r_out, 0])
-                                cube([ant_tunnel_r_out, ant_tunnel_r_out * 2,
-                                      ant_tunnel_length]);
-                        }
-                        cylinder(h = ant_tunnel_length,
-                                 r1 = 0, r2 = ant_tunnel_r_in);
-                    }
-    }
-}
-
-// ── Ant Tunnel Floor Cutouts ──────────────────────────────────────
-module reservoir_ant_tunnel_cutouts() {
-    for (i = [0 : ant_tunnel_count - 1]) {
-        angle = i * (360 / ant_tunnel_count);
-        rotate([0, 0, angle])
-            translate([ant_tunnel_start, 0, -0.5])
-                rotate([0, 90, 0])
-                    cylinder(h = ant_tunnel_length,
-                             r1 = 0, r2 = ant_tunnel_r_in);
-    }
+// ── Seal Ring Groove (annular press-fit channel on bottom face) ───
+module reservoir_seal_ring_groove() {
+    groove_od = seal_ring_od;
+    groove_id = seal_ring_id;
+    render_if_needed()
+        translate([0, 0, -0.01])
+            difference() {
+                cylinder(h = seal_ring_groove_depth + 0.01, d = groove_od);
+                translate([0, 0, -0.01])
+                    cylinder(h = seal_ring_groove_depth + 0.03, d = groove_id);
+            }
 }
 
 // ── Bolt Lock — Support Bosses ───────────────────────────────────
