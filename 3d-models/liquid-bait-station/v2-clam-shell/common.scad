@@ -147,6 +147,8 @@ spring_housing_collar_axial_clearance_mm = 0;
 spring_housing_bottom_clearance =
     (pin_top - reservoir_seat) - wall - spring_housing_collar_axial_clearance_mm;
 spring_housing_ceiling_h = 4;         // solid ceiling plug inside bore — spring pushes against this
+spring_socket_h  = 2;                 // twist-in spring retention socket depth (mm)
+spring_socket_id = spring_od;         // socket bore matches spring OD for friction fit
 spring_housing_h    = reservoir_cavity_h - spring_housing_bottom_clearance;
 spring_housing_bore_h = spring_housing_h - spring_housing_ceiling_h;  // open bore height
 
@@ -197,8 +199,19 @@ labyrinth_od          = labyrinth_id + 2 * labyrinth_wall_t;
 labyrinth_outer_r     = reservoir_id / 2 - labyrinth_od / 2;          // flush with cavity wall
 labyrinth_inner_r     = 13 + labyrinth_od / 2;                          // inner wall at 13mm from center
 labyrinth_bend_z      = wall + reservoir_cavity_h;                          // V starts at cavity ceiling
-labyrinth_inner_top_z = (station_height - reservoir_seat) - 2.6;             // inner leg top = nut pocket bottom (2.6 = bolt_lock_nut_h)
 labyrinth_angle_start = 0;                                             // first tube at 0°
+
+// ── Floor Ribs (bridge support for upside-down printing) ─────────
+// Full-height radial fins from floor to ceiling.  Thin (1 mm) for
+// most of the height, flaring to a wider base at the floor for
+// maximum bridge support.  Self-supporting when printed ceiling-down.
+floor_rib_count       = 12;                                          // total ribs (every 30°)
+floor_rib_t           = 1;                                           // shaft thickness for most of height (mm)
+floor_rib_base_t      = 3;                                           // flared width at floor (mm)
+floor_rib_flare_h     = 4;                                           // height of flare transition (mm)
+floor_rib_r_inner     = valve_retainer_od / 2 + 1;                   // 10 mm — clears needle seal retainer
+floor_rib_r_outer     = reservoir_id / 2;                            // end at cavity wall
+floor_rib_angle_start = 360 / floor_rib_count / 2;                   // offset 15° to interleave with labyrinth tubes at 0°
 
 // ── Reservoir Skirt (flush outer shell when assembled) ───────────
 // Extends the reservoir OD to match station OD above the station rim.

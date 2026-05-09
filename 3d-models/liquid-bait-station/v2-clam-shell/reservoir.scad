@@ -16,6 +16,7 @@ module reservoir() {
                 reservoir_valve_bore();
             }
             reservoir_labyrinth_tubes();
+            reservoir_floor_ribs();
             reservoir_skirt();
             reservoir_spring_housing();
             reservoir_spill_reservoir();
@@ -68,10 +69,19 @@ module reservoir_valve_bore() {
 module reservoir_spring_housing() {
     render_if_needed()
         translate([0, 0, wall + spring_housing_bottom_clearance])
-            difference() {
-                cylinder(h = spring_housing_h, d = spring_housing_od);
-                translate([0, 0, -0.01])
-                    cylinder(h = spring_housing_bore_h + 0.01, d = spring_housing_id);
+            union() {
+                difference() {
+                    cylinder(h = spring_housing_h, d = spring_housing_od);
+                    translate([0, 0, -0.01])
+                        cylinder(h = spring_housing_bore_h + 0.01, d = spring_housing_id);
+                }
+                // Spring retention socket — ring at bore ceiling
+                translate([0, 0, spring_housing_bore_h - spring_socket_h])
+                    difference() {
+                        cylinder(h = spring_socket_h, d = spring_housing_id);
+                        translate([0, 0, -0.01])
+                            cylinder(h = spring_socket_h + 0.02, d = spring_socket_id);
+                    }
             }
 }
 
@@ -214,6 +224,30 @@ module reservoir_labyrinth_hull_clip() {
                               spill_reservoir_wall + 0.2,
                               h_comp + 0.02]);
         }
+}
+
+// ── Floor Ribs (bridge support for upside-down printing) ─────────
+// Thin shaft from ceiling to flare zone, then widens to base at floor.
+module reservoir_floor_ribs() {
+    span    = floor_rib_r_outer - floor_rib_r_inner;
+    z_floor = wall;
+    z_flare = wall + floor_rib_flare_h;
+    z_ceil  = wall + reservoir_cavity_h;
+    render_if_needed()
+        for (i = [0 : floor_rib_count - 1])
+            rotate([0, 0, floor_rib_angle_start + i * (360 / floor_rib_count)])
+                union() {
+                    // Thin shaft: flare top → ceiling
+                    translate([floor_rib_r_inner, -floor_rib_t / 2, z_flare])
+                        cube([span, floor_rib_t, z_ceil - z_flare]);
+                    // Flared base: widens from shaft thickness to base width
+                    hull() {
+                        translate([floor_rib_r_inner, -floor_rib_t / 2, z_flare])
+                            cube([span, floor_rib_t, 0.01]);
+                        translate([floor_rib_r_inner, -floor_rib_base_t / 2, z_floor])
+                            cube([span, floor_rib_base_t, 0.01]);
+                    }
+                }
 }
 
 // ── Skirt ─────────────────────────────────────────────────────────
