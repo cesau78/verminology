@@ -7,7 +7,7 @@
 // Export scripts override via -D prototype=<true|false> from build-config.json.
 prototype = true;
 crosssection_view = true;  // cut the model along a plane to inspect internals
-crosssection_axis = "x";   // axis: "x", "y", or "z"
+crosssection_axis = "y";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
 $fn = prototype ? 32 : 128;
@@ -175,6 +175,16 @@ seal_ring_groove_depth = wall / 2;                                     // half t
 seal_ring_h            = valve_flange_h + seal_ring_groove_depth;      // flange height + groove
 seal_ring_protrusion   = seal_ring_h - seal_ring_groove_depth;         // = valve_flange_h below reservoir face
 
+// ── Spill Reservoir (anti-spill catchment around spring housing) ─────
+// Hollow cylinder surrounding the stopper chamber, divided into wedge
+// compartments by radial walls.  Hangs from the cavity ceiling; catches
+// liquid that would otherwise leak out when the station is inverted.
+spill_reservoir_h        = spring_housing_h;                // flush with spring housing bottom (mm)
+spill_reservoir_od       = 25;                             // outer diameter — clears labyrinth crossover (mm)
+spill_reservoir_wall     = 1.5;                            // outer wall + divider thickness (mm)
+spill_reservoir_sections = 6;                              // number of wedge compartments
+spill_reservoir_floor   = 1;                               // bottom closure disk thickness (mm)
+
 // ── Labyrinth Tubes (R-shaped sealed passages through reservoir) ─────
 // Each tube bridges the outer bait barrier: entry on dry side (outside
 // barrier), up through the reservoir cavity, across near the ceiling,
@@ -186,7 +196,8 @@ labyrinth_wall_t      = 1.0;                                          // tube wa
 labyrinth_od          = labyrinth_id + 2 * labyrinth_wall_t;
 labyrinth_outer_r     = reservoir_id / 2 - labyrinth_od / 2;          // flush with cavity wall
 labyrinth_inner_r     = 13 + labyrinth_od / 2;                          // inner wall at 13mm from center
-labyrinth_bend_z      = wall + reservoir_cavity_h - labyrinth_od / 2;       // flush with ceiling
+labyrinth_bend_z      = wall + reservoir_cavity_h;                          // V starts at cavity ceiling
+labyrinth_inner_top_z = (station_height - reservoir_seat) - 2.6;             // inner leg top = nut pocket bottom (2.6 = bolt_lock_nut_h)
 labyrinth_angle_start = 0;                                             // first tube at 0°
 
 // ── Reservoir Skirt (flush outer shell when assembled) ───────────

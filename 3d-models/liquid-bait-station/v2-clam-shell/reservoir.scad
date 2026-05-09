@@ -11,22 +11,20 @@ module reservoir() {
     difference() {
         union() {
             difference() {
-                union() {
-                    difference() {
-                        reservoir_shell();
-                        reservoir_cavity();
-                        reservoir_valve_bore();
-                    }
-                    reservoir_labyrinth_tubes();
-                    reservoir_skirt();
-                    reservoir_spring_housing();
-                }
+                reservoir_shell();
+                reservoir_cavity();
+                reservoir_valve_bore();
             }
+            reservoir_labyrinth_tubes();
+            reservoir_skirt();
+            reservoir_spring_housing();
+            reservoir_spill_reservoir();
             reservoir_tabs();
             reservoir_bolt_lock_bosses();
             reservoir_bolt_lock_seal_prism();
         }
         reservoir_labyrinth_bores();
+        reservoir_labyrinth_hull_clip();
         reservoir_seal_ring_groove();
         reservoir_bolt_lock_pocket();
         reservoir_side_scallops();
@@ -77,6 +75,39 @@ module reservoir_spring_housing() {
             }
 }
 
+// ── Spill Reservoir ─────────────────────────────────────────────
+// Pizza-wedge compartments around the spring housing, hanging from
+// the cavity ceiling.  Outer cylinder wall + radial divider walls;
+// the spring housing itself serves as the inner wall.
+module reservoir_spill_reservoir() {
+    z_bottom = wall + reservoir_cavity_h - spill_reservoir_h;
+    r_outer  = spill_reservoir_od / 2;
+    r_inner  = spring_housing_od / 2;
+    render_if_needed()
+        translate([0, 0, z_bottom]) {
+            // Bottom floor disk
+            difference() {
+                cylinder(h = spill_reservoir_floor, d = spill_reservoir_od);
+                translate([0, 0, -0.01])
+                    cylinder(h = spill_reservoir_floor + 0.02, d = spring_housing_od);
+            }
+            // Outer cylindrical wall
+            difference() {
+                cylinder(h = spill_reservoir_h, d = spill_reservoir_od);
+                translate([0, 0, -0.01])
+                    cylinder(h = spill_reservoir_h + 0.02,
+                             d = spill_reservoir_od - 2 * spill_reservoir_wall);
+            }
+            // Radial divider walls (staggered half-section from labyrinth tubes)
+            for (i = [0 : spill_reservoir_sections - 1])
+                rotate([0, 0, (360 / spill_reservoir_sections) / 2
+                             + i * (360 / spill_reservoir_sections)])
+                    translate([r_inner, -spill_reservoir_wall / 2, 0])
+                        cube([r_outer - r_inner, spill_reservoir_wall,
+                              spill_reservoir_h]);
+        }
+}
+
 // ── Guide Tabs ────────────────────────────────────────────────────
 module reservoir_tabs() {
     tab_h = skirt_z_start;
@@ -86,22 +117,47 @@ module reservoir_tabs() {
                 cube([tab_d + 0.01, tab_w, tab_h]);
 }
 
-// ── Labyrinth Tube Shape (shared by shell and bore) ──────────────
-// R-shaped path: outer vertical leg → horizontal crossover → inner leg.
+// ── Labyrinth Tube Shape (shared by shell and bore) ─────────────
+// Outer leg → V leg 1 (down) → V leg 2 (into spill reservoir wall).
+// Separate straight tube from feeding area to spill reservoir floor.
+// Both passages meet inside the spill reservoir compartment.
 // Parameter `d` selects OD (solid shell) or ID (passage bore).
 module _labyrinth_tube_shape(d) {
-    leg_h = labyrinth_bend_z + d / 2;
-    span  = labyrinth_outer_r - labyrinth_inner_r;
-    // Outer vertical leg (flush with cavity wall)
+    spill_r      = (spring_housing_od / 2
+                    + spill_reservoir_od / 2 - spill_reservoir_wall) / 2;
+    spill_z_bot  = wall + reservoir_cavity_h - spill_reservoir_h;
+    spill_wall_r = spill_reservoir_od / 2 - spill_reservoir_wall / 2;
+    vertex_r     = labyrinth_inner_r + labyrinth_od - labyrinth_wall_t;
+    vertex_z     = wall + labyrinth_od / 2 - 0.5;
+    v2_z         = vertex_z + (spill_wall_r - vertex_r) * spill_z_bot
+                   / (spill_r - labyrinth_inner_r);
+
+    // Outer vertical leg (full height to cavity ceiling)
     translate([labyrinth_outer_r, 0, -0.01])
-        cylinder(h = leg_h + 0.01, d = d);
-    // Inner vertical leg
-    translate([labyrinth_inner_r, 0, -0.01])
-        cylinder(h = leg_h + 0.01, d = d);
-    // Horizontal crossover at bend height
-    translate([labyrinth_inner_r, 0, labyrinth_bend_z])
-        rotate([0, 90, 0])
-            cylinder(h = span, d = d);
+        cylinder(h = labyrinth_bend_z + 0.01, d = d);
+
+    // V leg 1: ceiling → vertex (flat cap keeps bore out of ceiling)
+    hull() {
+        translate([labyrinth_outer_r, 0, labyrinth_bend_z - d / 2])
+            cylinder(h = d / 2, d = d);
+        translate([vertex_r, 0, vertex_z])
+            sphere(d = d);
+    }
+    // V leg 2: vertex → spill reservoir wall (parallel to straight tube)
+    hull() {
+        translate([vertex_r, 0, vertex_z])
+            sphere(d = d);
+        translate([spill_wall_r, 0, v2_z])
+            sphere(d = d);
+    }
+
+    // Straight tube: feeding area (bottom face) → spill reservoir floor
+    hull() {
+        translate([labyrinth_inner_r + 2, 0, 0])
+            sphere(d = d);
+        translate([spill_r + 2, 0, spill_z_bot])
+            sphere(d = d);
+    }
 }
 
 // ── Labyrinth Tubes — Solid Outer Shells ─────────────────────────
@@ -114,9 +170,50 @@ module reservoir_labyrinth_tubes() {
 
 // ── Labyrinth Tubes — Inner Bore Subtraction ─────────────────────
 module reservoir_labyrinth_bores() {
+    spill_r     = (spring_housing_od / 2
+                   + spill_reservoir_od / 2 - spill_reservoir_wall) / 2;
+    spill_z_bot = wall + reservoir_cavity_h - spill_reservoir_h;
     for (i = [0 : labyrinth_count - 1])
-        rotate([0, 0, labyrinth_angle_start + i * (360 / labyrinth_count)])
+        rotate([0, 0, labyrinth_angle_start + i * (360 / labyrinth_count)]) {
             _labyrinth_tube_shape(labyrinth_id);
+            // Bore punch-through: cut passage through spill reservoir floor
+            translate([spill_r + 2, 0, spill_z_bot - 0.01])
+                cylinder(h = spill_reservoir_floor + 0.02, d = labyrinth_id);
+        }
+}
+
+// ── Labyrinth Hull Clip — trim sphere extensions at boundaries ────
+// Hull-sphere endpoints on tube shells protrude past the reservoir
+// floor (into the feeding area) and into the spill reservoir
+// compartment interiors.  This subtraction clips both zones.
+module reservoir_labyrinth_hull_clip() {
+    // Below-floor clip: clear any solid within cavity ID below z = 0
+    translate([0, 0, -reservoir_od])
+        cylinder(h = reservoir_od, d = reservoir_id);
+
+    // Spill reservoir compartment clip: annular void minus divider walls
+    z_bottom  = wall + reservoir_cavity_h - spill_reservoir_h;
+    r_wall_in = spill_reservoir_od / 2 - spill_reservoir_wall;
+    r_inner   = spring_housing_od / 2;
+    h_comp    = spill_reservoir_h - spill_reservoir_floor;
+
+    translate([0, 0, z_bottom + spill_reservoir_floor])
+        difference() {
+            difference() {
+                cylinder(h = h_comp, d = 2 * r_wall_in);
+                translate([0, 0, -0.01])
+                    cylinder(h = h_comp + 0.02, d = spring_housing_od + 0.2);
+            }
+            for (i = [0 : spill_reservoir_sections - 1])
+                rotate([0, 0, (360 / spill_reservoir_sections) / 2
+                             + i * (360 / spill_reservoir_sections)])
+                    translate([r_inner - 0.01,
+                               -(spill_reservoir_wall + 0.2) / 2,
+                               -0.01])
+                        cube([r_wall_in - r_inner + 0.02,
+                              spill_reservoir_wall + 0.2,
+                              h_comp + 0.02]);
+        }
 }
 
 // ── Skirt ─────────────────────────────────────────────────────────
