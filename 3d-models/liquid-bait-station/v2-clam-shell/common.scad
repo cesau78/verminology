@@ -254,10 +254,11 @@ fillet_r = 2;  // radius of rounded edge on exposed top/bottom faces (mm)
 // ── Info stamp (bottom / bed face) ────────────────────────────────
 // Lines and per-part flags: ../build-stamp.scad (product-level; export script writes it).
 res_bottom_mark_size            = 6;    // line 1 (brand)
-res_bottom_mark_size_secondary  = 4;    // lines 2–3 (product, version)
+res_bottom_mark_size_secondary  = 4;    // line 2 (product)
+res_bottom_mark_size_tertiary   = 3;    // line 3 (version) — matches orientation label
 // Center-to-center spacing: lines 2–3 tight; lines 1–2 wider (rule sits halfway in that band).
 res_bottom_mark_gap_2_3 =
-    res_bottom_mark_size_secondary * 1.25;
+    res_bottom_mark_size_secondary * 1.5;
 res_bottom_mark_gap_extra_brand_to_product = 2.5; // extra mm between line 1 and line 2 vs 2–3
 res_bottom_mark_gap_1_2 = res_bottom_mark_gap_2_3 + res_bottom_mark_gap_extra_brand_to_product;
 // Rule under line 1: thickness tracks brand size (≈ bold "Y" stem); length from left edge of word to near final "y" tail.
@@ -273,8 +274,15 @@ res_bottom_mark_font     = "Liberation Sans:style=Bold";
 res_bottom_mark_brand_initial  = "V";
 res_bottom_mark_brand_rest     = "erminology";
 res_bottom_mark_initial_size   = 8.6;            // oversized V em size (tune visually)
+res_bottom_mark_initial_adv    = 0.8;           // advance factor for V (narrower than average char)
 res_bottom_mark_cap_h_ratio    = 0.83;         // cap-height ÷ em-size (Liberation Sans Bold)
 res_bottom_mark_descent_ratio  = 0.22;         // descender depth ÷ em-size
+// Shift product stamp block upward so line 3 bottom sits at disc center.
+res_bottom_mark_block_y_offset = 7;            // mm upward
+// Orientation label — separate from the product stamp block.
+res_bottom_mark_orient_text    = "DEPLOY THIS SIDE DOWN";
+res_bottom_mark_orient_size    = 3;            // font size (mm)
+res_bottom_mark_orient_y_frac  = -0.2;        // Y position as fraction of part_od (negative = toward bottom)
 
 include <../build-stamp.scad>
 
@@ -299,10 +307,10 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     init_drop = -0.2;
 
     // Estimated advance widths for horizontal centering
-    init_w   = len(res_bottom_mark_brand_initial) * init_sz * adv;
+    init_w   = len(res_bottom_mark_brand_initial) * init_sz * res_bottom_mark_initial_adv;
     rest_w   = len(res_bottom_mark_brand_rest)    * rest_sz * adv;
     brand_w  = init_w + rest_w;
-    brand_x0 = -brand_w / 2;
+    brand_x0 = -brand_w / 2 + 1.5;
 
     rule_t   = max(0.32, rest_sz * res_bottom_mark_rule_stroke_scale) + 0.05;
 
@@ -312,41 +320,42 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     rule_bottom_y = ys[0] - (cap_r / 2 + desc_r) * rest_sz;
     rule_y        = rule_bottom_y + rule_t / 2;
 
+    block_y = res_bottom_mark_block_y_offset;
+    orient_y = part_od * res_bottom_mark_orient_y_frac;
+
     if (enable && has_any) {
         rotate([0, 0, 90])
         translate([0, stamp_shift_y, -0.01])
             mirror([1, 0, 0]) {
+                // ── Product stamp block (shifted up by block_y) ──
                 if (info_stamp_line1 != "") {
-                    // Oversized initial (V)
                     linear_extrude(depth)
-                        translate([brand_x0, ys[0] - init_drop, 0])
+                        translate([brand_x0, ys[0] - init_drop + block_y, 0])
                             text(res_bottom_mark_brand_initial,
                                  size = init_sz,
                                  font = res_bottom_mark_font,
                                  halign = "left",
                                  valign = "center");
-                    // Rest of brand name (erminology)
                     linear_extrude(depth)
-                        translate([brand_x0 + init_w, ys[0], 0])
+                        translate([brand_x0 + init_w, ys[0] + block_y, 0])
                             text(res_bottom_mark_brand_rest,
                                  size = rest_sz,
                                  font = res_bottom_mark_font,
                                  halign = "left",
                                  valign = "center");
                 }
-                // Underline — bottom edge flush with "y" tail
                 if (info_stamp_line1 != "" && info_stamp_line2 != "")
                     linear_extrude(depth) {
                         right_inset = rest_sz * adv * res_bottom_mark_rule_right_inset;
                         rule_left = brand_x0 + init_w;
                         rule_right = brand_x0 + brand_w - right_inset;
                         rule_w = (rule_right - rule_left) * 0.90;
-                        translate([rule_left + rule_w / 2, rule_y, 0])
+                        translate([rule_left + rule_w / 2, rule_y + block_y, 0])
                             square([rule_w, rule_t], center = true);
                     }
                 if (info_stamp_line2 != "")
                     linear_extrude(depth)
-                        translate([0, ys[1], 0])
+                        translate([0, ys[1] + block_y, 0])
                             text(info_stamp_line2,
                                  size = res_bottom_mark_size_secondary,
                                  font = res_bottom_mark_font,
@@ -354,9 +363,19 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
                                  valign = "center");
                 if (info_stamp_line3 != "")
                     linear_extrude(depth)
-                        translate([0, ys[2], 0])
+                        translate([0, ys[2] + block_y, 0])
                             text(info_stamp_line3,
-                                 size = res_bottom_mark_size_secondary,
+                                 size = res_bottom_mark_size_tertiary,
+                                 font = res_bottom_mark_font,
+                                 halign = "center",
+                                 valign = "center");
+
+                // ── Orientation label (independent position) ──
+                if (res_bottom_mark_orient_text != "")
+                    linear_extrude(depth)
+                        translate([0, orient_y, 0])
+                            text(res_bottom_mark_orient_text,
+                                 size = res_bottom_mark_orient_size,
                                  font = res_bottom_mark_font,
                                  halign = "center",
                                  valign = "center");
