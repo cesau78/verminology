@@ -6,8 +6,8 @@
 // prototype: true → fast preview ($fn=32); false → production mesh ($fn=128).
 // Export scripts override via -D prototype=<true|false> from build-config.json.
 prototype = true;
-crosssection_view = true;  // cut the model along a plane to inspect internals
-crosssection_axis = "y";   // axis: "x", "y", or "z"
+crosssection_view = false;  // cut the model along a plane to inspect internals
+crosssection_axis = "x";   // axis: "x", "y", or "z"
 crosssection_pos  = 0;     // position (mm) along the chosen axis
 
 $fn = prototype ? 32 : 128;
@@ -268,6 +268,13 @@ res_bottom_mark_rule_right_inset    = 0.40;   // × (adv/n_chars): shorten from 
 // Shift whole stamp along +Y: fraction × part_od = distance from disc center toward rim (0.25 → mid-radius).
 res_bottom_mark_radial_shift_fraction = 0;
 res_bottom_mark_font     = "Liberation Sans:style=Bold";
+// Oversized brand initial — Tektonology-style split where "V" is larger.
+// V spans from the underline up to the "l" ascender.
+res_bottom_mark_brand_initial  = "V";
+res_bottom_mark_brand_rest     = "erminology";
+res_bottom_mark_initial_size   = 8.6;            // oversized V em size (tune visually)
+res_bottom_mark_cap_h_ratio    = 0.83;         // cap-height ÷ em-size (Liberation Sans Bold)
+res_bottom_mark_descent_ratio  = 0.22;         // descender depth ÷ em-size
 
 include <../build-stamp.scad>
 
@@ -281,33 +288,62 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     ys = [y1, y2, y3];
     stamp_shift_y = part_od * res_bottom_mark_radial_shift_fraction;
     has_any = info_stamp_line1 != "" || info_stamp_line2 != "" || info_stamp_line3 != "";
+
+    init_sz  = res_bottom_mark_initial_size;
+    rest_sz  = res_bottom_mark_size;
+    adv      = res_bottom_mark_rule_adv_per_char;
+    cap_r    = res_bottom_mark_cap_h_ratio;
+    desc_r   = res_bottom_mark_descent_ratio;
+
+    // Drop V center below erminology center (tune so V bottom ≈ underline bottom)
+    init_drop = -0.2;
+
+    // Estimated advance widths for horizontal centering
+    init_w   = len(res_bottom_mark_brand_initial) * init_sz * adv;
+    rest_w   = len(res_bottom_mark_brand_rest)    * rest_sz * adv;
+    brand_w  = init_w + rest_w;
+    brand_x0 = -brand_w / 2;
+
+    rule_t   = max(0.32, rest_sz * res_bottom_mark_rule_stroke_scale) + 0.05;
+
+    // Underline bottom flush with "y" descender:
+    // With valign="center" the baseline sits ≈ cap_r/2 below center,
+    // then descender extends desc_r * size further.
+    rule_bottom_y = ys[0] - (cap_r / 2 + desc_r) * rest_sz;
+    rule_y        = rule_bottom_y + rule_t / 2;
+
     if (enable && has_any) {
         rotate([0, 0, 90])
         translate([0, stamp_shift_y, -0.01])
             mirror([1, 0, 0]) {
-                if (info_stamp_line1 != "")
+                if (info_stamp_line1 != "") {
+                    // Oversized initial (V)
                     linear_extrude(depth)
-                        translate([0, ys[0], 0])
-                            text(info_stamp_line1,
-                                 size = res_bottom_mark_size,
+                        translate([brand_x0, ys[0] - init_drop, 0])
+                            text(res_bottom_mark_brand_initial,
+                                 size = init_sz,
                                  font = res_bottom_mark_font,
-                                 halign = "center",
+                                 halign = "left",
                                  valign = "center");
-                if (info_stamp_line1 != "" && info_stamp_line2 != "")
+                    // Rest of brand name (erminology)
                     linear_extrude(depth)
-                        translate([0, y1 / 2, 0])
-                            let (
-                                nch = max(len(info_stamp_line1), 1),
-                                adv = len(info_stamp_line1) * res_bottom_mark_size *
-                                    res_bottom_mark_rule_adv_per_char,
-                                cw = adv / nch,
-                                rule_t = max(0.32, res_bottom_mark_size * res_bottom_mark_rule_stroke_scale),
-                                x0 = -adv / 2,
-                                x1 = adv / 2 - cw * res_bottom_mark_rule_right_inset
-                            )
-                                if (x1 > x0 + 1)
-                                    translate([(x0 + x1) / 2, 0, 0])
-                                        square([x1 - x0, rule_t], center = true);
+                        translate([brand_x0 + init_w, ys[0], 0])
+                            text(res_bottom_mark_brand_rest,
+                                 size = rest_sz,
+                                 font = res_bottom_mark_font,
+                                 halign = "left",
+                                 valign = "center");
+                }
+                // Underline — bottom edge flush with "y" tail
+                if (info_stamp_line1 != "" && info_stamp_line2 != "")
+                    linear_extrude(depth) {
+                        right_inset = rest_sz * adv * res_bottom_mark_rule_right_inset;
+                        rule_left = brand_x0 + init_w;
+                        rule_right = brand_x0 + brand_w - right_inset;
+                        rule_w = (rule_right - rule_left) * 0.90;
+                        translate([rule_left + rule_w / 2, rule_y, 0])
+                            square([rule_w, rule_t], center = true);
+                    }
                 if (info_stamp_line2 != "")
                     linear_extrude(depth)
                         translate([0, ys[1], 0])
