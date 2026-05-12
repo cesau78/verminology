@@ -284,11 +284,29 @@ res_bottom_mark_orient_text    = "DEPLOY THIS SIDE DOWN";
 res_bottom_mark_orient_size    = 3;            // font size (mm)
 res_bottom_mark_orient_y_frac  = -0.2;        // Y position as fraction of part_od (negative = toward bottom)
 
+// ── QR Tag (per-unit inlay on reservoir top) ─────────────────────
+// Square pocket on the reservoir top face accepts a press-fit QR tag
+// printed in a contrasting color.  Tag is rendered separately per unit
+// with a unique URL baked in (see qr-tag.scad + build scripts).
+qr_tag_size      = 20;                              // outer dimension of tag square (mm)
+qr_tag_depth     = reservoir_bottom_deboss_depth;   // pocket depth = deboss depth
+qr_tag_clearance = 0.15;                            // per-side press-fit clearance (mm)
+// Reservoir-specific: DEPLOY label top edge at disc center (Y=0).
+// valign="center" puts glyph middle at orient_y; shift down by half the font size.
+qr_tag_orient_y  = -(res_bottom_mark_orient_size / 2);
+// Pocket center Y: below the DEPLOY label with a 1mm gap.
+// Negated vs stamp frame because the pocket doesn't pass through
+// the reservoir's mirror([1,0,0]) transform.
+qr_tag_pocket_y  = -(qr_tag_orient_y
+                    - res_bottom_mark_orient_size / 2   // bottom of DEPLOY text
+                    - 4                                 // gap
+                    - qr_tag_size / 2);                 // half the tag
+
 include <../build-stamp.scad>
 
 // Deboss up to three lines on exterior bottom (Z=0). part_od = flat OD; stamp shifted +Y toward mid-radius.
 // Lines 1–3 from build-stamp.scad: brand, product, version (+ Prototype when preview).
-module part_bottom_info_stamp_deboss(enable, part_od) {
+module part_bottom_info_stamp_deboss(enable, part_od, orient_text_override=undef, show_version=true, orient_y_override=undef) {
     depth = reservoir_bottom_deboss_depth + 0.02;
     y1 = res_bottom_mark_gap_1_2;
     y2 = 0;
@@ -296,6 +314,7 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     ys = [y1, y2, y3];
     stamp_shift_y = part_od * res_bottom_mark_radial_shift_fraction;
     has_any = info_stamp_line1 != "" || info_stamp_line2 != "" || info_stamp_line3 != "";
+    actual_orient = is_undef(orient_text_override) ? res_bottom_mark_orient_text : orient_text_override;
 
     init_sz  = res_bottom_mark_initial_size;
     rest_sz  = res_bottom_mark_size;
@@ -321,7 +340,7 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
     rule_y        = rule_bottom_y + rule_t / 2;
 
     block_y = res_bottom_mark_block_y_offset;
-    orient_y = part_od * res_bottom_mark_orient_y_frac;
+    orient_y = is_undef(orient_y_override) ? part_od * res_bottom_mark_orient_y_frac : orient_y_override;
 
     if (enable && has_any) {
         rotate([0, 0, 90])
@@ -361,7 +380,7 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
                                  font = res_bottom_mark_font,
                                  halign = "center",
                                  valign = "center");
-                if (info_stamp_line3 != "")
+                if (show_version && info_stamp_line3 != "")
                     linear_extrude(depth)
                         translate([0, ys[2] + block_y, 0])
                             text(info_stamp_line3,
@@ -371,10 +390,10 @@ module part_bottom_info_stamp_deboss(enable, part_od) {
                                  valign = "center");
 
                 // ── Orientation label (independent position) ──
-                if (res_bottom_mark_orient_text != "")
+                if (actual_orient != "")
                     linear_extrude(depth)
                         translate([0, orient_y, 0])
-                            text(res_bottom_mark_orient_text,
+                            text(actual_orient,
                                  size = res_bottom_mark_orient_size,
                                  font = res_bottom_mark_font,
                                  halign = "center",

@@ -30,7 +30,26 @@ module reservoir() {
         reservoir_bolt_lock_pocket();
         reservoir_side_scallops();
         reservoir_top_fillet();
+        translate([0, 0, reservoir_height])
+            mirror([0, 0, 1])
+                mirror([1, 0, 0])
+                    part_bottom_info_stamp_deboss(reservoir_stamp_bottom, reservoir_od,
+                        orient_text_override = "DEPLOY THIS SIDE UP",
+                        show_version = false,
+                        orient_y_override = qr_tag_orient_y);
+        reservoir_qr_pocket();
     }
+}
+
+// ── QR Tag Pocket (square recess on reservoir top face) ──────────
+// Centered between the product name and DEPLOY label in the stamp's
+// rotated coordinate frame, then projected onto the reservoir top.
+module reservoir_qr_pocket() {
+    pocket = qr_tag_size + qr_tag_clearance * 2;
+    translate([0, 0, reservoir_height - qr_tag_depth])
+        rotate([0, 0, 90])
+            translate([-pocket / 2, qr_tag_pocket_y - pocket / 2, 0])
+                cube([pocket, pocket, qr_tag_depth + 0.01]);
 }
 
 // ── Shell ─────────────────────────────────────────────────────────
