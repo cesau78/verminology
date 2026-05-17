@@ -1,4 +1,5 @@
 // V2 Assembly View — All parts in operating position.
+// Tray bait fill is the `show_batting` ring (assembly preview only — not a tread mesh). For prayer-sole tread + bracket preview see tektonology/3d-models/bumper-bracket/assembly.scad.
 // Toggle 'locked' to see seated vs raised.
 // Toggle 'exploded' to spread parts for inspection.
 
