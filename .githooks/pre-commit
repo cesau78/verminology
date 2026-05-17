@@ -13,6 +13,10 @@ staged=$(git diff --cached --name-only -- \
 
 [ -z "$staged" ] && exit 0
 
+# Preview-only assembly views (not in build-config exports) — no STL to regenerate.
+staged_needing_stl=$(printf '%s\n' "$staged" | grep -vE '/assembly\.scad$' || true)
+[ -z "$staged_needing_stl" ] && exit 0
+
 echo "[pre-commit] Liquid bait station source changed — rebuilding prototype STLs…"
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass \
