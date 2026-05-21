@@ -41,12 +41,13 @@ crosssection(anvil_dia) {
         translate([0, 0, anvil_z])
             anvil();
 
-    // Grip with both steel rules
+    // Grip with all three steel rules
     translate([0, 0, grip_z]) {
         color("CornflowerBlue", 0.85)
             substrate_cutter();
         translate([0, 0, -rule_protrusion]) {
             steel_rule(outer_rule_od, outer_rule_id, rule_height);
+            steel_rule(middle_rule_od, middle_rule_id, rule_height);
             steel_rule(inner_rule_od, inner_rule_id, rule_height);
         }
     }

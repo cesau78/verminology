@@ -1,5 +1,5 @@
 // Substrate Cutter Tools — Shared Parameters & Utility Modules
-// Two concentric steel-rule rings pressed through substrate material.
+// Three concentric steel-rule rings pressed through substrate material.
 //
 // Material: high-durability PLA
 
@@ -17,6 +17,11 @@ outer_rule_od = 50.9;   // outer diameter (mm)
 outer_rule_id = 49.8;   // inner diameter (mm)
 outer_rule_t  = 0.78;   // steel strip thickness (mm)
 rule_height   = 23.8;   // height of both rules (mm)
+
+// Middle ring
+middle_rule_od = 40.8;
+middle_rule_id = 39.4;
+middle_rule_t  = 0.85;
 
 // Inner ring
 inner_rule_od = 25.8;
@@ -52,6 +57,8 @@ total_height = slot_depth + grip_height;
 
 outer_slot_or = outer_rule_od / 2 + slot_clearance;
 outer_slot_ir = outer_rule_id / 2 - slot_clearance;
+middle_slot_or = middle_rule_od / 2 + slot_clearance;
+middle_slot_ir = middle_rule_id / 2 - slot_clearance;
 inner_slot_or = inner_rule_od / 2 + slot_clearance;
 inner_slot_ir = inner_rule_id / 2 - slot_clearance;
 
@@ -63,6 +70,7 @@ pocket_dia = grip_dia + 2 * registration_clearance;
 anvil_dia  = pocket_dia + 2 * anvil_flange;
 pocket_floor_z = anvil_base_height - registration_depth;
 outer_channel_mean_r = (outer_rule_od + outer_rule_id) / 4;
+middle_channel_mean_r = (middle_rule_od + middle_rule_id) / 4;
 inner_channel_mean_r = (inner_rule_od + inner_rule_id) / 4;
 
 echo(str("Core diameter: ", core_dia, " mm"));

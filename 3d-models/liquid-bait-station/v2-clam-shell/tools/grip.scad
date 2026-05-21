@@ -1,5 +1,5 @@
 // Substrate Cutter — Grip
-// Finger-ribbed cylindrical grip with two concentric annular slots
+// Finger-ribbed cylindrical grip with three concentric annular slots
 // for press-fitting steel rule rings.
 //
 // Print orientation: slot face UP, grip base on build plate.
@@ -67,6 +67,7 @@ module substrate_cutter() {
     difference() {
         grip_body();
         rule_slot(outer_slot_or, outer_slot_ir);
+        rule_slot(middle_slot_or, middle_slot_ir);
         rule_slot(inner_slot_or, inner_slot_ir);
     }
 }

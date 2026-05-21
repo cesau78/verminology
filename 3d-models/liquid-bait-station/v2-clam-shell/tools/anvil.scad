@@ -34,6 +34,8 @@ module anvil() {
         translate([0, 0, pocket_floor_z - channel_depth])
             relief_channel(outer_channel_mean_r);
         translate([0, 0, pocket_floor_z - channel_depth])
+            relief_channel(middle_channel_mean_r);
+        translate([0, 0, pocket_floor_z - channel_depth])
             relief_channel(inner_channel_mean_r);
         // Round outer edges
         edge_round(anvil_dia, anvil_rounding);
