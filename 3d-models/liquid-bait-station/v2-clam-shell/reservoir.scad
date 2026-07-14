@@ -37,19 +37,27 @@ module reservoir() {
                         orient_text_override = "DEPLOY THIS SIDE UP",
                         show_version = false,
                         orient_y_override = qr_tag_orient_y);
-        reservoir_qr_pocket();
+        reservoir_qr_frame();
     }
 }
 
-// ── QR Tag Pocket (square recess on reservoir top face) ──────────
-// Centered between the product name and DEPLOY label in the stamp's
-// rotated coordinate frame, then projected onto the reservoir top.
-module reservoir_qr_pocket() {
-    pocket = qr_tag_size + qr_tag_clearance * 2;
-    translate([0, 0, reservoir_height - qr_tag_depth])
+// ── QR Sticker Frame (engraved outline on reservoir top face) ────
+// Thin square groove marking where the QR sticker is affixed.  Same
+// shallow depth as the text deboss, so it prints face-down cleanly —
+// unlike the old full-square pocket, whose large first-layer void
+// warped and lifted off the plate.  The sticker sits flush on the
+// flat face inside the frame.
+module reservoir_qr_frame() {
+    outer = qr_tag_size + 2 * (qr_frame_gap + qr_frame_line_w);
+    inner = qr_tag_size + 2 * qr_frame_gap;
+    translate([0, 0, reservoir_height - reservoir_bottom_deboss_depth])
         rotate([0, 0, 90])
-            translate([-pocket / 2, qr_tag_pocket_y - pocket / 2, 0])
-                cube([pocket, pocket, qr_tag_depth + 0.01]);
+            translate([0, qr_tag_pocket_y, 0])
+                linear_extrude(reservoir_bottom_deboss_depth + 0.01)
+                    difference() {
+                        square(outer, center = true);
+                        square(inner, center = true);
+                    }
 }
 
 // ── Shell ─────────────────────────────────────────────────────────

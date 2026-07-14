@@ -27,6 +27,22 @@ reservoir_bottom_deboss_depth =
     print_initial_layer_h + print_deboss_layers_after_first * print_layer_h;
 // e.g. 0.2 + 3×0.16 = 0.68 mm
 
+// ── Two-color text (slicer layer color change, no inlay STLs) ─────
+// Station and reservoir print text-face-down in black.  At the deboss
+// floor height, swap filament to white for a couple of full layers,
+// then back to black for the rest of the shell.  The letter cutouts
+// (and the QR frame groove) read white through the black face, and
+// the all-white layers show as a contrast ring on the part sides.
+// Slicer setup: add color changes at the two print-Z heights echoed
+// below (Z = bottom of the first layer printed in the new color).
+print_white_band_layers = 2;   // full white layers behind the deboss floor
+print_color_change_white_z = reservoir_bottom_deboss_depth;               // 0.68 mm
+print_color_change_black_z = reservoir_bottom_deboss_depth
+                           + print_white_band_layers * print_layer_h;     // 1.00 mm
+echo(str("Two-color stamped faces — white starts at print Z ",
+         print_color_change_white_z, " mm, black resumes at ",
+         print_color_change_black_z, " mm (Z = bottom of first layer in new color)"));
+
 // ── Reservoir ─────────────────────────────────────────────────────
 // Base ODs below; `unit_od_reduction` shrinks reservoir + station together (skirt stays flush).
 unit_od_reduction  = 13;   // mm off former 77 / 85 mm footprint (~½″ dia); set 0 for full-size
@@ -284,23 +300,23 @@ res_bottom_mark_orient_text    = "DEPLOY THIS SIDE DOWN";
 res_bottom_mark_orient_size    = 3;            // font size (mm)
 res_bottom_mark_orient_y_frac  = -0.2;        // Y position as fraction of part_od (negative = toward bottom)
 
-// ── QR Tag (per-unit inlay on reservoir top) ─────────────────────
-// Square pocket on the reservoir top face accepts a press-fit QR tag
-// printed in a contrasting color.  Tag is rendered separately per unit
-// with a unique URL baked in (see qr-tag.scad + build scripts).
-qr_tag_size      = 20;                              // outer dimension of tag square (mm)
-qr_tag_depth     = reservoir_bottom_deboss_depth;   // pocket depth = deboss depth
-qr_tag_clearance = 0.15;                            // per-side press-fit clearance (mm)
+// ── QR Sticker Frame (placement guide on reservoir top) ──────────
+// Thin engraved square outline on the reservoir top face marks where
+// the per-unit QR sticker is affixed.  The sticker sits flush on the
+// flat face inside the frame; groove depth matches the text deboss.
+qr_tag_size     = 20;    // sticker dimension (mm)
+qr_frame_line_w = 0.8;   // engraved groove width (~2 extrusion widths)
+qr_frame_gap    = 0.5;   // clearance between sticker edge and groove
 // Reservoir-specific: DEPLOY label top edge at disc center (Y=0).
 // valign="center" puts glyph middle at orient_y; shift down by half the font size.
 qr_tag_orient_y  = -(res_bottom_mark_orient_size / 2);
-// Pocket center Y: below the DEPLOY label with a 1mm gap.
-// Negated vs stamp frame because the pocket doesn't pass through
+// Frame center Y: below the DEPLOY label with a gap.
+// Negated vs stamp frame because the frame doesn't pass through
 // the reservoir's mirror([1,0,0]) transform.
 qr_tag_pocket_y  = -(qr_tag_orient_y
                     - res_bottom_mark_orient_size / 2   // bottom of DEPLOY text
                     - 4                                 // gap
-                    - qr_tag_size / 2);                 // half the tag
+                    - qr_tag_size / 2);                 // half the sticker
 
 include <../build-stamp.scad>
 

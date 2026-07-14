@@ -1,7 +1,7 @@
 {
   "brand_name": "Verminology",
   "product_name": "Liquid Bait Station",
-  "product_version": "v2.8.0",
+  "product_version": "v2.8.1",
   "prototype": true,
   "exports": [
     {
@@ -38,26 +38,6 @@
       "scad": "v2-clam-shell/tools/anvil.scad",
       "stl": "latest-builds/{version_folder}/anvil.stl",
       "stamp": null
-    },
-    {
-      "scad": "v2-clam-shell/station-text.scad",
-      "stl": "latest-builds/{version_folder}/station-text.stl",
-      "stamp": null
-    },
-    {
-      "scad": "v2-clam-shell/reservoir-text.scad",
-      "stl": "latest-builds/{version_folder}/reservoir-text.stl",
-      "stamp": null
     }
-  ],
-  "qr_tag": {
-    "base_url": "https://verminology.com/items?id=",
-    "scad": "v2-clam-shell/reservoir-qr.scad",
-    "background": {
-      "stl": "latest-builds/{version_folder}/reservoir-{seq}-{uuid}-background.stl"
-    },
-    "contrast": {
-      "stl": "latest-builds/{version_folder}/reservoir-{seq}-{uuid}-contrast.stl"
-    }
-  }
+  ]
 }
